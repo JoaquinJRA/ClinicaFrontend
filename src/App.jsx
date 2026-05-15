@@ -1,6 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import AdminLayout from './layouts/AdminLayout'
 import DoctorLayout from './layouts/DoctorLayout'
 import PatientLayout from './layouts/PatientLayout'
+import AdminAppointments from './pages/admin/AdminAppointments'
+import AdminAudit from './pages/admin/AdminAudit'
+import AdminPayments from './pages/admin/AdminPayments'
+import AdminUsers from './pages/admin/AdminUsers'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import DoctorAppointments from './pages/doctor/DoctorAppointments'
@@ -29,6 +34,13 @@ function App() {
         <Route path="appointments" element={<DoctorAppointments />} />
         <Route path="prescriptions" element={<DoctorPrescriptions />} />
         <Route path="diagnosis" element={<DoctorDiagnosis />} />
+      </Route>
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Navigate to="/admin/users" replace />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="appointments" element={<AdminAppointments />} />
+        <Route path="payments" element={<AdminPayments />} />
+        <Route path="audit" element={<AdminAudit />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
