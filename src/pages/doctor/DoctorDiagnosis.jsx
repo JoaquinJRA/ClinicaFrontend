@@ -1,48 +1,50 @@
-import { useState } from 'react'
-import { ChevronDown, Plus, Search, User } from 'lucide-react'
-import Badge from '../../components/Badge'
-import Button from '../../components/Button'
-import Card from '../../components/Card'
-import Input from '../../components/Input'
+import { useState } from "react";
+import { ChevronDown, Plus, Search, User } from "lucide-react";
+import Badge from "../../components/Badge";
+import Button from "../../components/Button";
+import Card from "../../components/Card";
+import Input from "../../components/Input";
 
 const diagnosisHistory = [
   {
-    date: '07 Abril 2026',
-    summary: 'Control preventivo estable',
-    diagnosis: 'Paciente sin signos de enfermedad aguda. Presión arterial y frecuencia dentro de rango.',
-    treatment: 'Mantener hábitos saludables, hidratación y seguimiento preventivo anual.',
-    doctor: 'Dra. Luz Salazar',
+    date: "07 Abril 2026",
+    summary: "Control preventivo estable",
+    diagnosis:
+      "Paciente sin signos de enfermedad aguda. Presión arterial y frecuencia dentro de rango.",
+    treatment:
+      "Mantener hábitos saludables, hidratación y seguimiento preventivo anual.",
+    doctor: "Dra. Luz Salazar",
   },
   {
-    date: '18 Marzo 2026',
-    summary: 'Alergia estacional leve',
-    diagnosis: 'Rinitis alérgica leve con congestión intermitente.',
-    treatment: 'Loratadina 10mg según síntomas y evitar exposición a polvo.',
-    doctor: 'Dr. Marco Rivas',
+    date: "18 Marzo 2026",
+    summary: "Alergia estacional leve",
+    diagnosis: "Rinitis alérgica leve con congestión intermitente.",
+    treatment: "Loratadina 10mg según síntomas y evitar exposición a polvo.",
+    doctor: "Dr. Marco Rivas",
   },
   {
-    date: '02 Febrero 2026',
-    summary: 'Gastritis leve',
-    diagnosis: 'Molestia gástrica compatible con gastritis leve.',
-    treatment: 'Dieta blanda, control de irritantes y omeprazol por 7 días.',
-    doctor: 'Dra. Camila Torres',
+    date: "02 Febrero 2026",
+    summary: "Gastritis leve",
+    diagnosis: "Molestia gástrica compatible con gastritis leve.",
+    treatment: "Dieta blanda, control de irritantes y omeprazol por 7 días.",
+    doctor: "Dra. Camila Torres",
   },
-]
+];
 
 function DoctorDiagnosis() {
-  const [symptoms, setSymptoms] = useState(['Dolor leve', 'Fatiga'])
-  const [symptomInput, setSymptomInput] = useState('')
-  const [openIndex, setOpenIndex] = useState(0)
+  const [symptoms, setSymptoms] = useState(["Dolor leve", "Fatiga"]);
+  const [symptomInput, setSymptomInput] = useState("");
+  const [openIndex, setOpenIndex] = useState(0);
 
   const addSymptom = () => {
-    const nextSymptom = symptomInput.trim()
-    if (!nextSymptom) return
-    setSymptoms((currentSymptoms) => [...currentSymptoms, nextSymptom])
-    setSymptomInput('')
-  }
+    const nextSymptom = symptomInput.trim();
+    if (!nextSymptom) return;
+    setSymptoms((currentSymptoms) => [...currentSymptoms, nextSymptom]);
+    setSymptomInput("");
+  };
 
   return (
-    <div className="mx-auto max-w-[1120px]">
+    <div className="mx-auto max-w-280">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-[#1A3A6B]">Diagnósticos</h1>
         <p className="mt-2 text-sm text-[#6B7280]">
@@ -85,19 +87,23 @@ function DoctorDiagnosis() {
 
           <div className="mt-5 space-y-5">
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Motivo de consulta</span>
+              <span className="mb-2 block text-sm font-semibold text-[#111827]">
+                Motivo de consulta
+              </span>
               <Input placeholder="Control general" />
             </label>
 
             <div>
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Síntomas</span>
+              <span className="mb-2 block text-sm font-semibold text-[#111827]">
+                Síntomas
+              </span>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Input
                   onChange={(event) => setSymptomInput(event.target.value)}
                   onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      addSymptom()
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      addSymptom();
                     }
                   }}
                   placeholder="Agregar síntoma"
@@ -114,13 +120,17 @@ function DoctorDiagnosis() {
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {symptoms.map((symptom) => (
-                  <Badge key={symptom} variant="blue">{symptom}</Badge>
+                  <Badge key={symptom} variant="blue">
+                    {symptom}
+                  </Badge>
                 ))}
               </div>
             </div>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Diagnóstico</span>
+              <span className="mb-2 block text-sm font-semibold text-[#111827]">
+                Diagnóstico
+              </span>
               <textarea
                 className="min-h-28 w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none focus:ring-2 focus:ring-[#2563EB]/30"
                 placeholder="Describa el diagnóstico del paciente"
@@ -128,7 +138,9 @@ function DoctorDiagnosis() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Tratamiento indicado</span>
+              <span className="mb-2 block text-sm font-semibold text-[#111827]">
+                Tratamiento indicado
+              </span>
               <textarea
                 className="min-h-28 w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none focus:ring-2 focus:ring-[#2563EB]/30"
                 placeholder="Indique tratamiento y recomendaciones"
@@ -136,7 +148,9 @@ function DoctorDiagnosis() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Observaciones</span>
+              <span className="mb-2 block text-sm font-semibold text-[#111827]">
+                Observaciones
+              </span>
               <textarea
                 className="min-h-24 w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none focus:ring-2 focus:ring-[#2563EB]/30"
                 placeholder="Observaciones adicionales"
@@ -144,14 +158,18 @@ function DoctorDiagnosis() {
             </label>
           </div>
 
-          <Button className="mt-6 w-full" type="button">Guardar Diagnóstico →</Button>
+          <Button className="mt-6 w-full" type="button">
+            Guardar Diagnóstico →
+          </Button>
         </Card>
 
         <section>
-          <h2 className="mb-4 text-xl font-bold text-[#1A3A6B]">Historial de diagnósticos</h2>
+          <h2 className="mb-4 text-xl font-bold text-[#1A3A6B]">
+            Historial de diagnósticos
+          </h2>
           <div className="space-y-4">
             {diagnosisHistory.map((item, index) => {
-              const isOpen = openIndex === index
+              const isOpen = openIndex === index;
 
               return (
                 <Card className="p-0" key={item.date}>
@@ -161,28 +179,49 @@ function DoctorDiagnosis() {
                     type="button"
                   >
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{item.date}</p>
-                      <h3 className="mt-1 font-bold text-[#111827]">{item.summary}</h3>
+                      <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                        {item.date}
+                      </p>
+                      <h3 className="mt-1 font-bold text-[#111827]">
+                        {item.summary}
+                      </h3>
                     </div>
                     <ChevronDown
-                      className={`h-5 w-5 shrink-0 text-[#6B7280] transition ${isOpen ? 'rotate-180' : ''}`}
+                      className={`h-5 w-5 shrink-0 text-[#6B7280] transition ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
                     />
                   </button>
                   {isOpen && (
                     <div className="border-t border-gray-100 px-5 py-4 text-sm leading-6 text-[#6B7280]">
-                      <p><span className="font-bold text-[#111827]">Diagnóstico:</span> {item.diagnosis}</p>
-                      <p className="mt-2"><span className="font-bold text-[#111827]">Tratamiento:</span> {item.treatment}</p>
-                      <p className="mt-2"><span className="font-bold text-[#111827]">Médico:</span> {item.doctor}</p>
+                      <p>
+                        <span className="font-bold text-[#111827]">
+                          Diagnóstico:
+                        </span>{" "}
+                        {item.diagnosis}
+                      </p>
+                      <p className="mt-2">
+                        <span className="font-bold text-[#111827]">
+                          Tratamiento:
+                        </span>{" "}
+                        {item.treatment}
+                      </p>
+                      <p className="mt-2">
+                        <span className="font-bold text-[#111827]">
+                          Médico:
+                        </span>{" "}
+                        {item.doctor}
+                      </p>
                     </div>
                   )}
                 </Card>
-              )
+              );
             })}
           </div>
         </section>
       </div>
     </div>
-  )
+  );
 }
 
-export default DoctorDiagnosis
+export default DoctorDiagnosis;

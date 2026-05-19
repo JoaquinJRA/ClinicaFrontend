@@ -7,21 +7,21 @@ import {
   FileText,
   Scale,
   User,
-} from 'lucide-react'
-import Badge from '../../components/Badge'
-import Button from '../../components/Button'
-import Card from '../../components/Card'
+} from "lucide-react";
+import Badge from "../../components/Badge";
+import Button from "../../components/Button";
+import Card from "../../components/Card";
 
 const generalInfo = [
-  { icon: Droplets, value: 'O+', label: 'Grupo Sanguíneo' },
-  { icon: Scale, value: '65 kg', label: 'Peso' },
-  { icon: ArrowUpDown, value: '168 cm', label: 'Altura' },
-  { icon: Activity, value: '120/80', label: 'Hemoglobina' },
-]
+  { icon: Droplets, value: "O+", label: "Grupo Sanguíneo" },
+  { icon: Scale, value: "65 kg", label: "Peso" },
+  { icon: ArrowUpDown, value: "168 cm", label: "Altura" },
+  { icon: Activity, value: "120/80", label: "Hemoglobina" },
+];
 
 function PatientDashboard() {
   return (
-    <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-6 xl:grid-cols-[35%_1fr]">
+    <div className="mx-auto grid max-w-295 grid-cols-1 gap-6 xl:grid-cols-[35%_1fr]">
       {/* Columna de perfil e información general del paciente. */}
       <section className="space-y-5">
         <Card className="text-center">
@@ -34,11 +34,17 @@ function PatientDashboard() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Card className="p-5">
-            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">F.N.</p>
-            <p className="mt-2 text-lg font-bold text-[#111827]">1 Abril 2004</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              F.N.
+            </p>
+            <p className="mt-2 text-lg font-bold text-[#111827]">
+              1 Abril 2004
+            </p>
           </Card>
           <Card className="p-5">
-            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Género</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Género
+            </p>
             <p className="mt-2 text-lg font-bold text-[#111827]">Hombre</p>
           </Card>
         </div>
@@ -52,7 +58,9 @@ function PatientDashboard() {
               <div className="rounded-2xl bg-gray-50 p-4" key={item.label}>
                 <item.icon className="mb-3 h-6 w-6 text-[#2563EB]" />
                 <p className="text-xl font-bold text-[#111827]">{item.value}</p>
-                <p className="mt-1 text-xs font-medium text-[#6B7280]">{item.label}</p>
+                <p className="mt-1 text-xs font-medium text-[#6B7280]">
+                  {item.label}
+                </p>
               </div>
             ))}
           </div>
@@ -66,7 +74,9 @@ function PatientDashboard() {
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
               <AlertTriangle className="h-5 w-5 text-[#EF4444]" />
             </div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Alergias</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Alergias
+            </h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
@@ -104,7 +114,9 @@ function PatientDashboard() {
             <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
               <div>
                 <p className="font-bold">Loratadina</p>
-                <p className="text-sm text-[#6B7280]">En caso presente alergias</p>
+                <p className="text-sm text-[#6B7280]">
+                  En caso presente alergias
+                </p>
               </div>
               <Badge variant="blue">10mg</Badge>
             </div>
@@ -120,17 +132,24 @@ function PatientDashboard() {
               Enfermedades y/o operaciones previas
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {['Apendicectomía (2018)', 'Bronquitis (2008)', 'Asma (Niñez)'].map((item) => (
+              {[
+                "Apendicectomía (2018)",
+                "Bronquitis (2008)",
+                "Asma (Niñez)",
+              ].map((item) => (
                 <Badge key={item}>{item}</Badge>
               ))}
             </div>
           </div>
           <div className="mt-6">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Historial Médico</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+              Historial Médico
+            </p>
             <div className="mt-3 rounded-2xl bg-gray-100 p-4 text-sm leading-6 text-[#6B7280]">
-              Paciente con evolución estable. Presenta controles preventivos regulares y antecedentes
-              respiratorios leves durante la infancia. Se recomienda mantener seguimiento anual y
-              cargar documentos clínicos anteriores para completar el expediente.
+              Paciente con evolución estable. Presenta controles preventivos
+              regulares y antecedentes respiratorios leves durante la infancia.
+              Se recomienda mantener seguimiento anual y cargar documentos
+              clínicos anteriores para completar el expediente.
             </div>
           </div>
         </Card>
@@ -151,7 +170,7 @@ function PatientDashboard() {
         </Card>
       </section>
     </div>
-  )
+  );
 }
 
-export default PatientDashboard
+export default PatientDashboard;
