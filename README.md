@@ -17,8 +17,9 @@ Asegúrate de tener instalado:
 
 ### 1. Ubicarse en la carpeta del frontend
 
-```bash
+bash
 cd C:\Users\joaqu\OneDrive\Documentos\GitHub\ClinicaFrontend
+
 2. Instalar dependencias
 npm install
 3. Levantar el frontend
