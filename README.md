@@ -1,28 +1,30 @@
-# Clinica Frontend
+# 💻 Clínica Luz — Frontend
 
-Frontend inicial para Proyecto Clinica creado con React y Vite.
+Frontend desarrollado para el sistema de gestión de la Clínica Luz.
 
-## Requisitos
+---
 
-- Node.js y npm.
-- Backend Node en `http://localhost:3001`.
-- Backend Java en `http://localhost:8081`.
+## 📋 Requisitos previos
 
-## Instalacion
+Asegúrate de tener instalado:
+
+- Node.js v18 o superior
+- npm v9 o superior
+
+---
+
+## 🚀 Configuración del Frontend
+
+### 1. Ubicarse en la carpeta del frontend
 
 ```bash
+cd C:\Users\joaqu\OneDrive\Documentos\GitHub\ClinicaFrontend
+2. Instalar dependencias
 npm install
-```
+3. Levantar el frontend
+npm run dev -- --host localhost --port 5173
+🌐 URL del proyecto
 
-## Comandos
+El frontend estará disponible en:
 
-```bash
-npm run dev
-npm run build
-npm run preview
-```
-
-Durante desarrollo, Vite proxya:
-
-- `/api` hacia `http://localhost:3001`
-- `/java-api` hacia `http://localhost:8081/api`
+http://localhost:5173
