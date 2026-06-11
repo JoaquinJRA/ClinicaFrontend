@@ -1,150 +1,285 @@
-import { useMemo, useState } from 'react'
-import { Pencil, Search, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  Eye,
+  Pencil,
+  Search,
+  ToggleLeft,
+  ToggleRight,
+  Trash2,
+} from 'lucide-react'
+import api from '../../api/axios'
 import Badge from '../../components/Badge'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Input from '../../components/Input'
 import Modal from '../../components/Modal'
 
-const userGroups = {
-  Pacientes: [
-    {
-      name: 'Carlos García',
-      id: 'DNI 12345678',
-      email: 'carlos.garcia@email.com',
-      phone: '+51 999 111 222',
-      status: 'Activo',
-    },
-  ],
-  Médicos: [
-    {
-      name: 'Dra. Luz Salazar',
-      id: 'CMP 54821',
-      email: 'luz.salazar@clinicaluz.pe',
-      phone: '+51 966 444 555',
-      status: 'Activo',
-    },
-  ],
-  Administradores: [
-    {
-      name: 'Andrea Castillo',
-      id: 'ADM-001',
-      email: 'andrea.castillo@clinicaluz.pe',
-      phone: '+51 944 666 777',
-      status: 'Activo',
-    },
-  ],
+const rolMap = {
+  Pacientes: 'PACIENTE',
+  Médicos: 'MEDICO',
+  Administradores: 'ADMIN',
 }
 
-function UserForm({ type }) {
-  const isDoctor = type === 'Médicos'
-  const isAdmin = type === 'Administradores'
-
-  return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <label>
-        <span className="mb-2 block text-sm font-semibold text-[#111827]">Nombre</span>
-        <Input placeholder="Carlos" />
-      </label>
-      <label>
-        <span className="mb-2 block text-sm font-semibold text-[#111827]">Apellido</span>
-        <Input placeholder="García" />
-      </label>
-      <label>
-        <span className="mb-2 block text-sm font-semibold text-[#111827]">DNI</span>
-        <Input placeholder="12345678" />
-      </label>
-      <label>
-        <span className="mb-2 block text-sm font-semibold text-[#111827]">Correo</span>
-        <Input placeholder="usuario@clinicaluz.pe" />
-      </label>
-      <label>
-        <span className="mb-2 block text-sm font-semibold text-[#111827]">Teléfono</span>
-        <Input placeholder="+51 999 999 999" />
-      </label>
-      {!isAdmin && (
-        <label>
-          <span className="mb-2 block text-sm font-semibold text-[#111827]">
-            {isDoctor ? 'Especialidad' : 'Dirección'}
-          </span>
-          {isDoctor ? (
-            <select className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none">
-              <option>Medicina General</option>
-              <option>Neumología</option>
-              <option>Traumatología</option>
-            </select>
-          ) : (
-            <Input placeholder="Av. Luz 123, Lima" />
-          )}
-        </label>
-      )}
-      {isDoctor ? (
-        <>
-          <label>
-            <span className="mb-2 block text-sm font-semibold text-[#111827]">CMP</span>
-            <Input placeholder="54821" />
-          </label>
-          <label>
-            <span className="mb-2 block text-sm font-semibold text-[#111827]">Horario</span>
-            <Input placeholder="Lun-Vie 08:00 - 16:00" />
-          </label>
-        </>
-      ) : (
-        !isAdmin && (
-          <>
-            <label>
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">F. Nacimiento</span>
-              <Input type="date" />
-            </label>
-            <label>
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Género</span>
-              <select className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none">
-                <option>Hombre</option>
-                <option>Mujer</option>
-              </select>
-            </label>
-            <label>
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Grupo Sanguíneo</span>
-              <Input placeholder="O+" />
-            </label>
-            <label>
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Peso</span>
-              <Input placeholder="65 kg" />
-            </label>
-            <label>
-              <span className="mb-2 block text-sm font-semibold text-[#111827]">Altura</span>
-              <Input placeholder="168 cm" />
-            </label>
-          </>
-        )
-      )}
-      <label>
-        <span className="mb-2 block text-sm font-semibold text-[#111827]">Estado</span>
-        <select className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none">
-          <option>Activo</option>
-          <option>Inactivo</option>
-        </select>
-      </label>
-    </div>
-  )
+const formInicial = {
+  nombre: '',
+  apellido: '',
+  email: '',
+  contrasena: '',
+  rol: 'PACIENTE',
+  dni: '',
+  telefono: '',
+  direccion: '',
+  fechaNacimiento: '',
+  genero: 'MASCULINO',
+  grupoSanguineo: '',
+  peso: '',
+  altura: '',
+  presionArterial: '',
+  antecedentesMedicos: '',
+  notasGenerales: '',
+  alergias: [],
+  medicamentos: [],
+  numeroColegiatura: '',
+  especialidadId: '',
 }
+
+const alergiaInicial = { nombre: '', severidad: 'LEVE' }
+
+const medicamentoInicial = {
+  nombre: '',
+  dosis: '',
+  frecuencia: '',
+  instrucciones: '',
+}
+
+const getUsuarioNombre = (usuario) => `${usuario.nombre} ${usuario.apellido}`
+
+const getUsuarioDocumento = (usuario) =>
+  usuario.paciente?.dni ||
+  (usuario.medico?.numeroColegiatura
+    ? `CMP-${usuario.medico.numeroColegiatura}`
+    : 'ADMIN')
+
+const getUsuarioTelefono = (usuario) =>
+  usuario.paciente?.telefono || usuario.medico?.telefono || '—'
+
+const fechaInput = (fecha) => (fecha ? fecha.slice(0, 10) : '')
+
+const limpiarAlergias = (alergias) =>
+  alergias
+    .map((alergia) => ({
+      nombre: alergia.nombre.trim(),
+      severidad: alergia.severidad || 'LEVE',
+    }))
+    .filter((alergia) => alergia.nombre)
+
+const limpiarMedicamentos = (medicamentos) =>
+  medicamentos
+    .map((medicamento) => ({
+      nombre: medicamento.nombre.trim(),
+      dosis: medicamento.dosis.trim(),
+      frecuencia: medicamento.frecuencia.trim(),
+      instrucciones: medicamento.instrucciones.trim(),
+      activo: true,
+    }))
+    .filter((medicamento) => medicamento.nombre && medicamento.dosis)
 
 function AdminUsers() {
-  const [activeTab, setActiveTab] = useState('Pacientes')
-  const [modalType, setModalType] = useState(null)
-  const [selectedUser, setSelectedUser] = useState(null)
+  const [usuarios, setUsuarios] = useState([])
+  const [filtroRol, setFiltroRol] = useState('Pacientes')
+  const [busqueda, setBusqueda] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [modalTipo, setModalTipo] = useState('crear')
+  const [usuarioSel, setUsuarioSel] = useState(null)
+  const [especialidades, setEspecialidades] = useState([])
+  const [form, setForm] = useState(formInicial)
 
-  const users = useMemo(() => userGroups[activeTab], [activeTab])
+  const fetchUsuarios = useCallback(async () => {
+    const res = await api.get('/admin/usuarios', {
+      params: {
+        rol: rolMap[filtroRol],
+        q: busqueda,
+      },
+    })
+    setUsuarios(res.data)
+  }, [busqueda, filtroRol])
 
-  const openModal = (type, user = null) => {
-    setModalType(type)
-    setSelectedUser(user)
+  const fetchEspecialidades = useCallback(async () => {
+    const res = await api.get('/admin/especialidades')
+    setEspecialidades(res.data)
+  }, [])
+
+  useEffect(() => {
+    fetchEspecialidades()
+  }, [fetchEspecialidades])
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      fetchUsuarios()
+    }, 400)
+
+    return () => clearTimeout(timeout)
+  }, [fetchUsuarios])
+
+  const actualizarForm = (campo, valor) => {
+    setForm((actual) => ({ ...actual, [campo]: valor }))
   }
 
-  const closeModal = () => {
-    setModalType(null)
-    setSelectedUser(null)
+  const actualizarAlergia = (index, campo, valor) => {
+    setForm((actual) => ({
+      ...actual,
+      alergias: actual.alergias.map((alergia, itemIndex) =>
+        itemIndex === index ? { ...alergia, [campo]: valor } : alergia,
+      ),
+    }))
   }
+
+  const agregarAlergia = () => {
+    setForm((actual) => ({
+      ...actual,
+      alergias: [...actual.alergias, { ...alergiaInicial }],
+    }))
+  }
+
+  const quitarAlergia = (index) => {
+    setForm((actual) => ({
+      ...actual,
+      alergias: actual.alergias.filter((_, itemIndex) => itemIndex !== index),
+    }))
+  }
+
+  const actualizarMedicamento = (index, campo, valor) => {
+    setForm((actual) => ({
+      ...actual,
+      medicamentos: actual.medicamentos.map((medicamento, itemIndex) =>
+        itemIndex === index ? { ...medicamento, [campo]: valor } : medicamento,
+      ),
+    }))
+  }
+
+  const agregarMedicamento = () => {
+    setForm((actual) => ({
+      ...actual,
+      medicamentos: [...actual.medicamentos, { ...medicamentoInicial }],
+    }))
+  }
+
+  const quitarMedicamento = (index) => {
+    setForm((actual) => ({
+      ...actual,
+      medicamentos: actual.medicamentos.filter((_, itemIndex) => itemIndex !== index),
+    }))
+  }
+
+  const abrirCrear = () => {
+    setForm({
+      ...formInicial,
+      rol: rolMap[filtroRol],
+      alergias: [{ ...alergiaInicial }],
+      medicamentos: [{ ...medicamentoInicial }],
+    })
+    setUsuarioSel(null)
+    setModalTipo('crear')
+    setShowModal(true)
+  }
+
+  const abrirEditar = (usuario) => {
+    setUsuarioSel(usuario)
+    setForm({
+      ...formInicial,
+      nombre: usuario.nombre ?? '',
+      apellido: usuario.apellido ?? '',
+      email: usuario.email ?? '',
+      rol: usuario.rol?.nombre ?? rolMap[filtroRol],
+      dni: usuario.paciente?.dni ?? '',
+      telefono: usuario.paciente?.telefono ?? usuario.medico?.telefono ?? '',
+      direccion: usuario.paciente?.direccion ?? '',
+      fechaNacimiento: fechaInput(usuario.paciente?.fechaNacimiento),
+      genero: usuario.paciente?.genero ?? 'MASCULINO',
+      grupoSanguineo: usuario.paciente?.grupoSanguineo ?? '',
+      peso: usuario.paciente?.peso ?? '',
+      altura: usuario.paciente?.altura ?? '',
+      presionArterial: usuario.paciente?.presionArterial ?? '',
+      antecedentesMedicos: usuario.paciente?.antecedentesMedicos ?? '',
+      notasGenerales: usuario.paciente?.historialMedico?.notasGenerales ?? '',
+      alergias: usuario.paciente?.alergias?.length
+        ? usuario.paciente.alergias.map((alergia) => ({
+            nombre: alergia.nombre ?? '',
+            severidad: alergia.severidad ?? 'LEVE',
+          }))
+        : [{ ...alergiaInicial }],
+      medicamentos: usuario.paciente?.medicamentos?.length
+        ? usuario.paciente.medicamentos.map((medicamento) => ({
+            nombre: medicamento.nombre ?? '',
+            dosis: medicamento.dosis ?? '',
+            frecuencia: medicamento.frecuencia ?? '',
+            instrucciones: medicamento.instrucciones ?? '',
+          }))
+        : [{ ...medicamentoInicial }],
+      numeroColegiatura: usuario.medico?.numeroColegiatura ?? '',
+      especialidadId: usuario.medico?.especialidadId ?? '',
+    })
+    setModalTipo('editar')
+    setShowModal(true)
+  }
+
+  const abrirVer = (usuario) => {
+    setUsuarioSel(usuario)
+    setModalTipo('ver')
+    setShowModal(true)
+  }
+
+  const cerrarModal = () => {
+    setShowModal(false)
+    setUsuarioSel(null)
+    setForm(formInicial)
+  }
+
+  const payloadForm = () => ({
+    ...form,
+    peso: form.peso === '' ? undefined : Number(form.peso),
+    altura: form.altura === '' ? undefined : Number(form.altura),
+    alergias: limpiarAlergias(form.alergias),
+    medicamentos: limpiarMedicamentos(form.medicamentos),
+    especialidadId:
+      form.especialidadId === '' ? undefined : Number(form.especialidadId),
+  })
+
+  const handleGuardar = async () => {
+    if (modalTipo === 'crear') {
+      await api.post('/admin/usuarios', payloadForm())
+    } else {
+      await api.put(`/admin/usuarios/${usuarioSel.id}`, payloadForm())
+    }
+
+    await fetchUsuarios()
+    cerrarModal()
+  }
+
+  const handleToggle = async (usuario) => {
+    await api.patch(`/admin/usuarios/${usuario.id}/estado`, {
+      estado: usuario.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO',
+    })
+    await fetchUsuarios()
+  }
+
+  const handleEliminar = async (id) => {
+    if (!confirm('¿Eliminar este usuario?')) return
+
+    try {
+      await api.delete(`/admin/usuarios/${id}`)
+      await fetchUsuarios()
+    } catch (err) {
+      if (err.response?.status === 409) {
+        alert('No se puede eliminar: el usuario tiene citas pendientes o confirmadas')
+        return
+      }
+      throw err
+    }
+  }
+
+  const mostrarCamposPaciente = form.rol === 'PACIENTE'
+  const mostrarCamposMedico = form.rol === 'MEDICO'
 
   return (
     <div className="mx-auto max-w-[1180px]">
@@ -155,25 +290,30 @@ function AdminUsers() {
             Administre pacientes, médicos y administradores con datos visuales.
           </p>
         </div>
-        <Button onClick={() => openModal('add')} type="button">+ Agregar Usuario</Button>
+        <Button onClick={abrirCrear} type="button">+ Agregar Usuario</Button>
       </div>
 
       <Card className="mb-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6B7280]" />
-            <Input className="pl-12" placeholder="Buscar usuario por nombre, DNI o correo" />
+            <Input
+              className="pl-12"
+              onChange={(event) => setBusqueda(event.target.value)}
+              placeholder="Buscar usuario por nombre, DNI o correo"
+              value={busqueda}
+            />
           </div>
           <div className="flex flex-wrap gap-2">
-            {Object.keys(userGroups).map((tab) => (
+            {Object.keys(rolMap).map((tab) => (
               <button
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  activeTab === tab
+                  filtroRol === tab
                     ? 'bg-[#1A3A6B] text-white'
                     : 'bg-gray-100 text-[#6B7280] hover:bg-blue-50 hover:text-[#2563EB]'
                 }`}
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => setFiltroRol(tab)}
                 type="button"
               >
                 {tab}
@@ -198,73 +338,360 @@ function AdminUsers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {users.map((user) => (
-                <tr className="bg-white" key={user.email}>
-                  <td className="px-6 py-4 font-semibold text-[#111827]">{user.name}</td>
-                  <td className="px-6 py-4 text-sm text-[#6B7280]">{user.id}</td>
-                  <td className="px-6 py-4 text-sm text-[#6B7280]">{user.email}</td>
-                  <td className="px-6 py-4 text-sm text-[#6B7280]">{user.phone}</td>
+              {usuarios.map((usuario) => (
+                <tr className="bg-white" key={usuario.id}>
+                  <td className="px-6 py-4 font-semibold text-[#111827]">
+                    {getUsuarioNombre(usuario)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-[#6B7280]">
+                    {getUsuarioDocumento(usuario)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-[#6B7280]">{usuario.email}</td>
+                  <td className="px-6 py-4 text-sm text-[#6B7280]">
+                    {getUsuarioTelefono(usuario)}
+                  </td>
                   <td className="px-6 py-4">
-                    <Badge variant={user.status === 'Activo' ? 'confirmed' : 'neutral'}>{user.status}</Badge>
+                    <Badge variant={usuario.estado === 'ACTIVO' ? 'confirmed' : 'canceled'}>
+                      {usuario.estado}
+                    </Badge>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <button
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-[#2563EB]"
-                        onClick={() => openModal('edit', user)}
+                        onClick={() => abrirEditar(usuario)}
                         type="button"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-[#EF4444]"
-                        onClick={() => openModal('delete', user)}
+                        onClick={() => handleEliminar(usuario.id)}
                         type="button"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                       <button
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-[#6B7280]"
+                        onClick={() => abrirVer(usuario)}
                         type="button"
                       >
-                        {user.status === 'Activo' ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-[#6B7280]"
+                        onClick={() => handleToggle(usuario)}
+                        type="button"
+                      >
+                        {usuario.estado === 'ACTIVO' ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+              {!usuarios.length && (
+                <tr>
+                  <td className="px-6 py-8 text-center text-sm text-[#6B7280]" colSpan={6}>
+                    No hay usuarios para los filtros seleccionados.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </Card>
 
       <Modal
-        isOpen={modalType === 'add' || modalType === 'edit'}
+        isOpen={showModal && modalTipo !== 'ver'}
         maxWidth="max-w-3xl"
-        onClose={closeModal}
-        title={`${modalType === 'edit' ? 'Editar' : 'Agregar'} ${activeTab.slice(0, -1)}`}
+        onClose={cerrarModal}
+        title={`${modalTipo === 'editar' ? 'Editar' : 'Agregar'} Usuario`}
       >
-        <UserForm type={activeTab} />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label>
+            <span className="mb-2 block text-sm font-semibold text-[#111827]">Nombre</span>
+            <Input onChange={(event) => actualizarForm('nombre', event.target.value)} value={form.nombre} />
+          </label>
+          <label>
+            <span className="mb-2 block text-sm font-semibold text-[#111827]">Apellido</span>
+            <Input onChange={(event) => actualizarForm('apellido', event.target.value)} value={form.apellido} />
+          </label>
+          <label>
+            <span className="mb-2 block text-sm font-semibold text-[#111827]">Correo</span>
+            <Input onChange={(event) => actualizarForm('email', event.target.value)} type="email" value={form.email} />
+          </label>
+          {modalTipo === 'crear' && (
+            <label>
+              <span className="mb-2 block text-sm font-semibold text-[#111827]">Contraseña</span>
+              <Input onChange={(event) => actualizarForm('contrasena', event.target.value)} type="password" value={form.contrasena} />
+            </label>
+          )}
+          {modalTipo === 'crear' && (
+            <label>
+              <span className="mb-2 block text-sm font-semibold text-[#111827]">Rol</span>
+              <select
+                className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none"
+                onChange={(event) => actualizarForm('rol', event.target.value)}
+                value={form.rol}
+              >
+                <option value="PACIENTE">Paciente</option>
+                <option value="MEDICO">Médico</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </label>
+          )}
+
+          {mostrarCamposPaciente && (
+            <>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">DNI</span>
+                <Input onChange={(event) => actualizarForm('dni', event.target.value)} value={form.dni} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Teléfono</span>
+                <Input onChange={(event) => actualizarForm('telefono', event.target.value)} value={form.telefono} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Dirección</span>
+                <Input onChange={(event) => actualizarForm('direccion', event.target.value)} value={form.direccion} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">F. Nacimiento</span>
+                <Input onChange={(event) => actualizarForm('fechaNacimiento', event.target.value)} type="date" value={form.fechaNacimiento} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Género</span>
+                <select
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none"
+                  onChange={(event) => actualizarForm('genero', event.target.value)}
+                  value={form.genero}
+                >
+                  <option value="MASCULINO">Masculino</option>
+                  <option value="FEMENINO">Femenino</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Grupo Sanguíneo</span>
+                <Input onChange={(event) => actualizarForm('grupoSanguineo', event.target.value)} value={form.grupoSanguineo} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Peso</span>
+                <Input onChange={(event) => actualizarForm('peso', event.target.value)} type="number" value={form.peso} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Altura</span>
+                <Input onChange={(event) => actualizarForm('altura', event.target.value)} type="number" value={form.altura} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Presión Arterial</span>
+                <Input onChange={(event) => actualizarForm('presionArterial', event.target.value)} value={form.presionArterial} />
+              </label>
+              <label className="md:col-span-2">
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Antecedentes médicos / operaciones previas</span>
+                <textarea
+                  className="min-h-[92px] w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none"
+                  onChange={(event) => actualizarForm('antecedentesMedicos', event.target.value)}
+                  value={form.antecedentesMedicos}
+                />
+              </label>
+              <label className="md:col-span-2">
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Historial médico</span>
+                <textarea
+                  className="min-h-[92px] w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none"
+                  onChange={(event) => actualizarForm('notasGenerales', event.target.value)}
+                  value={form.notasGenerales}
+                />
+              </label>
+              <div className="space-y-3 rounded-2xl border border-gray-100 p-4 md:col-span-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-[#111827]">Alergias</p>
+                  <button
+                    className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-[#2563EB]"
+                    onClick={agregarAlergia}
+                    type="button"
+                  >
+                    + Agregar
+                  </button>
+                </div>
+                {form.alergias.map((alergia, index) => (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto]" key={`alergia-${index}`}>
+                    <Input
+                      onChange={(event) => actualizarAlergia(index, 'nombre', event.target.value)}
+                      placeholder="Nombre de alergia"
+                      value={alergia.nombre}
+                    />
+                    <select
+                      className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none"
+                      onChange={(event) => actualizarAlergia(index, 'severidad', event.target.value)}
+                      value={alergia.severidad}
+                    >
+                      <option value="SEVERO">Severo</option>
+                      <option value="MODERADO">Moderado</option>
+                      <option value="LEVE">Leve</option>
+                    </select>
+                    <button
+                      className="rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-[#EF4444]"
+                      onClick={() => quitarAlergia(index)}
+                      type="button"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3 rounded-2xl border border-gray-100 p-4 md:col-span-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-[#111827]">Medicamentos activos</p>
+                  <button
+                    className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-[#2563EB]"
+                    onClick={agregarMedicamento}
+                    type="button"
+                  >
+                    + Agregar
+                  </button>
+                </div>
+                {form.medicamentos.map((medicamento, index) => (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2" key={`medicamento-${index}`}>
+                    <Input
+                      onChange={(event) => actualizarMedicamento(index, 'nombre', event.target.value)}
+                      placeholder="Medicamento"
+                      value={medicamento.nombre}
+                    />
+                    <Input
+                      onChange={(event) => actualizarMedicamento(index, 'dosis', event.target.value)}
+                      placeholder="Dosis"
+                      value={medicamento.dosis}
+                    />
+                    <Input
+                      onChange={(event) => actualizarMedicamento(index, 'frecuencia', event.target.value)}
+                      placeholder="Frecuencia"
+                      value={medicamento.frecuencia}
+                    />
+                    <div className="flex gap-3">
+                      <Input
+                        onChange={(event) => actualizarMedicamento(index, 'instrucciones', event.target.value)}
+                        placeholder="Instrucciones"
+                        value={medicamento.instrucciones}
+                      />
+                      <button
+                        className="shrink-0 rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-[#EF4444]"
+                        onClick={() => quitarMedicamento(index)}
+                        type="button"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {mostrarCamposMedico && (
+            <>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Teléfono</span>
+                <Input onChange={(event) => actualizarForm('telefono', event.target.value)} value={form.telefono} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">CMP</span>
+                <Input onChange={(event) => actualizarForm('numeroColegiatura', event.target.value)} value={form.numeroColegiatura} />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Especialidad</span>
+                <select
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none"
+                  onChange={(event) => actualizarForm('especialidadId', event.target.value)}
+                  value={form.especialidadId}
+                >
+                  <option value="">Seleccionar</option>
+                  {especialidades.map((especialidad) => (
+                    <option key={especialidad.id} value={especialidad.id}>
+                      {especialidad.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
+        </div>
         <div className="mt-6 flex justify-end gap-3">
-          <button className="rounded-full bg-gray-100 px-5 py-3 font-semibold text-[#6B7280]" onClick={closeModal} type="button">
+          <button className="rounded-full bg-gray-100 px-5 py-3 font-semibold text-[#6B7280]" onClick={cerrarModal} type="button">
             Cancelar
           </button>
-          <Button onClick={closeModal} type="button">Guardar</Button>
+          <Button onClick={handleGuardar} type="button">Guardar</Button>
         </div>
       </Modal>
 
-      <Modal isOpen={modalType === 'delete'} onClose={closeModal} title="Eliminar usuario">
-        <p className="text-sm leading-6 text-[#6B7280]">
-          ¿Desea eliminar a {selectedUser?.name}? Esta acción es visual y no modifica datos reales.
-        </p>
-        <div className="mt-6 flex justify-end gap-3">
-          <button className="rounded-full bg-gray-100 px-5 py-3 font-semibold text-[#6B7280]" onClick={closeModal} type="button">
-            Cancelar
-          </button>
-          <button className="rounded-full bg-[#EF4444] px-5 py-3 font-semibold text-white" onClick={closeModal} type="button">
-            Eliminar
-          </button>
-        </div>
+      <Modal
+        isOpen={showModal && modalTipo === 'ver'}
+        maxWidth="max-w-3xl"
+        onClose={cerrarModal}
+        title="Detalle de usuario"
+      >
+        {usuarioSel && (
+          <div className="space-y-5 text-sm text-[#6B7280]">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <p><span className="font-bold text-[#111827]">Nombre:</span> {getUsuarioNombre(usuarioSel)}</p>
+              <p><span className="font-bold text-[#111827]">Correo:</span> {usuarioSel.email}</p>
+              <p><span className="font-bold text-[#111827]">Rol:</span> {usuarioSel.rol?.nombre}</p>
+              <p><span className="font-bold text-[#111827]">Estado:</span> {usuarioSel.estado}</p>
+              <p><span className="font-bold text-[#111827]">DNI/ID:</span> {getUsuarioDocumento(usuarioSel)}</p>
+              <p><span className="font-bold text-[#111827]">Teléfono:</span> {getUsuarioTelefono(usuarioSel)}</p>
+              {usuarioSel.paciente && (
+                <>
+                  <p><span className="font-bold text-[#111827]">Dirección:</span> {usuarioSel.paciente.direccion || '—'}</p>
+                  <p><span className="font-bold text-[#111827]">Nacimiento:</span> {fechaInput(usuarioSel.paciente.fechaNacimiento) || '—'}</p>
+                  <p><span className="font-bold text-[#111827]">Género:</span> {usuarioSel.paciente.genero}</p>
+                  <p><span className="font-bold text-[#111827]">Grupo sanguíneo:</span> {usuarioSel.paciente.grupoSanguineo || '—'}</p>
+                  <p><span className="font-bold text-[#111827]">Peso:</span> {usuarioSel.paciente.peso ?? '—'}</p>
+                  <p><span className="font-bold text-[#111827]">Altura:</span> {usuarioSel.paciente.altura ?? '—'}</p>
+                  <p><span className="font-bold text-[#111827]">Presión arterial:</span> {usuarioSel.paciente.presionArterial || '—'}</p>
+                  <p className="md:col-span-2"><span className="font-bold text-[#111827]">Antecedentes:</span> {usuarioSel.paciente.antecedentesMedicos || '—'}</p>
+                  <p className="md:col-span-2"><span className="font-bold text-[#111827]">Historial médico:</span> {usuarioSel.paciente.historialMedico?.notasGenerales || '—'}</p>
+                </>
+              )}
+              {usuarioSel.medico && (
+                <>
+                  <p><span className="font-bold text-[#111827]">Colegiatura:</span> {usuarioSel.medico.numeroColegiatura}</p>
+                  <p><span className="font-bold text-[#111827]">Especialidad:</span> {usuarioSel.medico.especialidad?.nombre}</p>
+                </>
+              )}
+            </div>
+
+            {usuarioSel.paciente && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <p className="mb-2 font-bold text-[#111827]">Alergias</p>
+                  <div className="flex flex-wrap gap-2">
+                    {usuarioSel.paciente.alergias?.length ? (
+                      usuarioSel.paciente.alergias.map((alergia) => (
+                        <Badge key={alergia.id} variant="severe">{alergia.nombre}</Badge>
+                      ))
+                    ) : (
+                      <span>Sin alergias</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-2 font-bold text-[#111827]">Medicamentos activos</p>
+                  <div className="flex flex-wrap gap-2">
+                    {usuarioSel.paciente.medicamentos?.length ? (
+                      usuarioSel.paciente.medicamentos.map((medicamento) => (
+                        <Badge key={medicamento.id} variant="blue">
+                          {medicamento.nombre} · {medicamento.dosis}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span>Sin medicamentos activos</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   )

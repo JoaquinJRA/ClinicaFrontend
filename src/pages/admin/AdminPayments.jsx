@@ -1,32 +1,101 @@
+import { useCallback, useEffect, useState } from 'react'
 import { Check, Eye, Search } from 'lucide-react'
+import api from '../../api/axios'
 import Badge from '../../components/Badge'
 import Card from '../../components/Card'
 import Input from '../../components/Input'
+import Modal from '../../components/Modal'
 
-const kpis = [
-  { label: 'Total recaudado', value: 'S/ 12,450' },
-  { label: 'Pagos pendientes', value: '8' },
-  { label: 'Pagos cancelados', value: '2' },
-]
-
-const payments = [
-  {
-    patient: 'Carlos García',
-    appointmentId: 'CIT-1401',
-    type: 'Consulta General',
-    amount: 'S/ 120',
-    status: 'Pendiente',
-    date: '14/04/2026',
-  },
-]
-
-const paymentVariant = {
-  Pendiente: 'pending',
-  Pagado: 'confirmed',
-  Cancelado: 'canceled',
+const estadoMap = {
+  'Todos los estados': '',
+  Pendiente: 'PENDIENTE',
+  Pagado: 'PAGADO',
+  Fallido: 'FALLIDO',
 }
 
+const paymentVariant = {
+  PENDIENTE: 'pending',
+  PAGADO: 'confirmed',
+  FALLIDO: 'canceled',
+}
+
+const paymentLabel = {
+  PENDIENTE: 'Pendiente',
+  PAGADO: 'Pagado',
+  FALLIDO: 'Fallido',
+}
+
+const formatFecha = (fecha) =>
+  new Date(fecha).toLocaleDateString('es-PE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+
+const getPaciente = (pago) =>
+  `${pago.cita.paciente.usuario.nombre} ${pago.cita.paciente.usuario.apellido}`
+
+const getMedico = (pago) =>
+  pago.cita.medico.usuario
+    ? `Dr. ${pago.cita.medico.usuario.nombre} ${pago.cita.medico.usuario.apellido}`
+    : '—'
+
 function AdminPayments() {
+  const [resumen, setResumen] = useState({
+    totalRecaudado: 0,
+    pagosPendientes: 0,
+    pagosCancelados: 0,
+  })
+  const [pagos, setPagos] = useState([])
+  const [busqueda, setBusqueda] = useState('')
+  const [filtroEstado, setFiltroEstado] = useState('Todos los estados')
+  const [fechaDesde, setFechaDesde] = useState('')
+  const [fechaHasta, setFechaHasta] = useState('')
+  const [pagoSel, setPagoSel] = useState(null)
+  const [showDetalle, setShowDetalle] = useState(false)
+
+  const fetchResumen = useCallback(async () => {
+    const res = await api.get('/admin/pagos/resumen')
+    setResumen(res.data)
+  }, [])
+
+  const fetchPagos = useCallback(async () => {
+    const res = await api.get('/admin/pagos', {
+      params: {
+        ...(busqueda && { q: busqueda }),
+        ...(estadoMap[filtroEstado] && { estado: estadoMap[filtroEstado] }),
+        ...(fechaDesde && { fechaDesde }),
+        ...(fechaHasta && { fechaHasta }),
+      },
+    })
+    setPagos(res.data)
+  }, [busqueda, fechaDesde, fechaHasta, filtroEstado])
+
+  useEffect(() => {
+    fetchResumen()
+  }, [fetchResumen])
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      fetchPagos()
+    }, 400)
+
+    return () => clearTimeout(timeout)
+  }, [fetchPagos])
+
+  const handleMarcarPagado = async (id) => {
+    if (!confirm('¿Marcar este pago como pagado?')) return
+
+    await api.patch(`/admin/pagos/${id}/marcar-pagado`)
+    await fetchPagos()
+    await fetchResumen()
+  }
+
+  const abrirDetalle = (pago) => {
+    setPagoSel(pago)
+    setShowDetalle(true)
+  }
+
   return (
     <div className="mx-auto max-w-[1180px]">
       <div className="mb-6">
@@ -37,12 +106,20 @@ function AdminPayments() {
       </div>
 
       <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-        {kpis.map((item) => (
-          <Card key={item.label}>
-            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">{item.label}</p>
-            <p className="mt-3 text-3xl font-bold text-[#1A3A6B]">{item.value}</p>
-          </Card>
-        ))}
+        <Card>
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Total recaudado</p>
+          <p className="mt-3 text-3xl font-bold text-[#1A3A6B]">
+            S/ {resumen.totalRecaudado.toLocaleString()}
+          </p>
+        </Card>
+        <Card>
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Pagos pendientes</p>
+          <p className="mt-3 text-3xl font-bold text-[#1A3A6B]">{resumen.pagosPendientes}</p>
+        </Card>
+        <Card>
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Pagos cancelados</p>
+          <p className="mt-3 text-3xl font-bold text-[#1A3A6B]">{resumen.pagosCancelados}</p>
+        </Card>
       </div>
 
       <Card className="mb-5">
@@ -50,16 +127,33 @@ function AdminPayments() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_190px_190px_190px]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6B7280]" />
-            <Input className="pl-12" placeholder="Buscar paciente o ID de cita" />
+            <Input
+              className="pl-12"
+              onChange={(event) => setBusqueda(event.target.value)}
+              placeholder="Buscar paciente o ID de cita"
+              value={busqueda}
+            />
           </div>
-          <select className="rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none">
+          <select
+            className="rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none"
+            onChange={(event) => setFiltroEstado(event.target.value)}
+            value={filtroEstado}
+          >
             <option>Todos los estados</option>
             <option>Pendiente</option>
             <option>Pagado</option>
-            <option>Cancelado</option>
+            <option>Fallido</option>
           </select>
-          <Input type="date" />
-          <Input type="date" />
+          <Input
+            onChange={(event) => setFechaDesde(event.target.value)}
+            type="date"
+            value={fechaDesde}
+          />
+          <Input
+            onChange={(event) => setFechaHasta(event.target.value)}
+            type="date"
+            value={fechaHasta}
+          />
         </div>
       </Card>
 
@@ -78,32 +172,70 @@ function AdminPayments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {payments.map((payment) => (
-                <tr className="bg-white" key={payment.appointmentId}>
-                  <td className="px-6 py-4 font-semibold text-[#111827]">{payment.patient}</td>
-                  <td className="px-6 py-4 text-sm text-[#6B7280]">{payment.appointmentId}</td>
-                  <td className="px-6 py-4 text-sm text-[#6B7280]">{payment.type}</td>
-                  <td className="px-6 py-4 font-bold text-[#111827]">{payment.amount}</td>
-                  <td className="px-6 py-4">
-                    <Badge variant={paymentVariant[payment.status]}>{payment.status}</Badge>
+              {pagos.map((pago) => (
+                <tr className="bg-white" key={pago.id}>
+                  <td className="px-6 py-4 font-semibold text-[#111827]">{getPaciente(pago)}</td>
+                  <td className="px-6 py-4 text-sm text-[#6B7280]">CIT-{pago.citaId}</td>
+                  <td className="px-6 py-4 text-sm text-[#6B7280]">
+                    {pago.cita.medico.especialidad.nombre}
                   </td>
-                  <td className="px-6 py-4 text-sm text-[#6B7280]">{payment.date}</td>
+                  <td className="px-6 py-4 font-bold text-[#111827]">S/ {pago.monto}</td>
+                  <td className="px-6 py-4">
+                    <Badge variant={paymentVariant[pago.estado]}>{paymentLabel[pago.estado]}</Badge>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-[#6B7280]">{formatFecha(pago.creadoEn)}</td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-[#2563EB]" type="button">
+                      <button
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-[#2563EB]"
+                        onClick={() => abrirDetalle(pago)}
+                        type="button"
+                      >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700" type="button">
-                        <Check className="h-4 w-4" />
-                      </button>
+                      {pago.estado === 'PENDIENTE' && (
+                        <button
+                          className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700"
+                          onClick={() => handleMarcarPagado(pago.id)}
+                          type="button"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
               ))}
+              {!pagos.length && (
+                <tr>
+                  <td className="px-6 py-8 text-center text-sm text-[#6B7280]" colSpan={7}>
+                    No hay pagos para los filtros seleccionados.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </Card>
+
+      <Modal
+        isOpen={showDetalle}
+        maxWidth="max-w-2xl"
+        onClose={() => setShowDetalle(false)}
+        title="Detalle de pago"
+      >
+        {pagoSel && (
+          <div className="grid grid-cols-1 gap-4 text-sm text-[#6B7280] md:grid-cols-2">
+            <p><span className="font-bold text-[#111827]">Paciente:</span> {getPaciente(pagoSel)}</p>
+            <p><span className="font-bold text-[#111827]">Médico:</span> {getMedico(pagoSel)}</p>
+            <p><span className="font-bold text-[#111827]">Especialidad:</span> {pagoSel.cita.medico.especialidad.nombre}</p>
+            <p><span className="font-bold text-[#111827]">Fecha cita:</span> {formatFecha(pagoSel.cita.fecha)}</p>
+            <p><span className="font-bold text-[#111827]">Monto:</span> S/ {pagoSel.monto}</p>
+            <p><span className="font-bold text-[#111827]">Estado:</span> {paymentLabel[pagoSel.estado]}</p>
+            <p><span className="font-bold text-[#111827]">Método de pago:</span> {pagoSel.metodoPago}</p>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

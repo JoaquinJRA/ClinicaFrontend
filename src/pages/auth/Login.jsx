@@ -10,8 +10,8 @@ import { useAuthStore } from "../../../store/authStore";
 
 const ROLE_REDIRECT = {
   PACIENTE: "/patient/dashboard",
-  MEDICO: "/doctor/dashboard",
-  ADMIN: "/admin/dashboard",
+  MEDICO: "/doctor/appointments",
+  ADMIN: "/admin/users",
 };
 
 function Login() {
