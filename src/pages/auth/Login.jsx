@@ -303,7 +303,7 @@ function Login() {
 
             <label className="mt-6 block">
               <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
-                Codigo de verificacion
+                Codigo de verificación
               </span>
               <input
                 autoFocus

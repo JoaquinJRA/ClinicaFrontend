@@ -292,7 +292,7 @@ function Register() {
               </label>
 
               <label>
-                <span className={labelClass}>Contrasena</span>
+                <span className={labelClass}>Contraseña</span>
                 <div className="relative">
                   <FieldIcon icon={Lock} />
                   <input
@@ -318,7 +318,7 @@ function Register() {
                   <FieldIcon icon={Lock} />
                   <input
                     className={inputBase}
-                    placeholder="Repita su contrasena"
+                    placeholder="Repita su contraseña"
                     type="password"
                     {...register("confirmarContrasena", {
                       required: "Confirme su contrasena.",
@@ -340,9 +340,9 @@ function Register() {
 
         <div className="relative mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-[#64748B]">
-            Ya tiene cuenta?{" "}
+            Ya tiene una cuenta?{" "}
             <Link className="font-black text-[#2563EB] hover:text-[#102A52]" to="/login">
-              Iniciar sesion
+              Iniciar sesión
             </Link>
           </p>
           <button
