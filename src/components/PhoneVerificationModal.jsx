@@ -1,3 +1,4 @@
+import { ShieldCheck, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import api from '../api/axios'
 
@@ -82,40 +83,32 @@ function PhoneVerificationModal({ telefono, onVerificado, onCerrar }) {
   const segundos = (countdown % 60).toString().padStart(2, '0')
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-96 max-w-full rounded-2xl bg-white p-8 text-center shadow-xl">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-          <svg
-            aria-hidden="true"
-            className="h-8 w-8 text-green-600"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M12 3l7 3v5c0 4.5-2.8 8.6-7 10-4.2-1.4-7-5.5-7-10V6l7-3z"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-            <path
-              d="M9 12l2 2 4-5"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-          </svg>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#071426]/70 px-4 backdrop-blur-sm">
+      <div className="relative w-[28rem] max-w-full overflow-hidden rounded-[2rem] bg-white p-7 shadow-[0_28px_90px_rgba(15,23,42,0.35)]">
+        <button
+          className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B] transition hover:bg-[#E2E8F0]"
+          onClick={onCerrar}
+          type="button"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-        <h2 className="text-2xl font-bold text-[#111827]">Verifica tu numero</h2>
-        <p className="mt-3 text-sm text-[#6B7280]">
-          Hemos enviado un codigo de 6 digitos a
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EAF2FF] text-[#2563EB]">
+          <ShieldCheck className="h-8 w-8" />
+        </div>
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-[#2563EB]">
+          Verificacion SMS
         </p>
-        <p className="mt-1 font-bold text-green-600">{telefono}</p>
+        <h2 className="mt-2 text-3xl font-black text-[#102A52]">
+          Confirme su numero.
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-[#64748B]">
+          Hemos enviado un codigo de 6 digitos a{' '}
+          <span className="font-black text-[#2563EB]">{telefono}</span>.
+        </p>
 
         <input
-          className="mt-6 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-2xl font-bold outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+          className="mt-6 w-full rounded-[1.25rem] border border-[#BFDBFE] bg-[#F8FAFC] px-4 py-4 text-center text-2xl font-black text-[#102A52] outline-none transition focus:border-[#2563EB] focus:bg-white focus:ring-4 focus:ring-[#2563EB]/10"
           inputMode="numeric"
           maxLength={6}
           onChange={(event) => setCodigo(event.target.value.replace(/\D/g, ''))}
@@ -128,46 +121,45 @@ function PhoneVerificationModal({ telefono, onVerificado, onCerrar }) {
           value={codigo}
         />
 
-        {error && <p className="mt-3 text-sm font-semibold text-red-500">{error}</p>}
-
-        <button
-          className="mt-6 w-full rounded-xl bg-green-600 px-5 py-3 font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={loading || codigo.length < 6}
-          onClick={verificarCodigo}
-          type="button"
-        >
-          {loading ? 'Verificando...' : 'Verificar Codigo'}
-        </button>
-
-        <p className="mt-4 text-sm font-semibold text-[#111827]">
-          El codigo expira en {minutos}:{segundos}
-        </p>
-
-        {countdown === 0 ? (
-          <button
-            className="mt-3 text-sm font-bold text-green-600 hover:text-green-700"
-            disabled={loading}
-            onClick={reenviar}
-            type="button"
-          >
-            Reenviar codigo
-          </button>
-        ) : (
-          <p className="mt-3 text-sm text-gray-500">
-            No recibiste el codigo? Reenviar en {countdown}s
+        {error && (
+          <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+            {error}
           </p>
         )}
 
         <button
-          className="mt-5 text-sm font-semibold text-[#6B7280] hover:text-[#111827]"
-          onClick={onCerrar}
+          className="mt-6 w-full rounded-[1.25rem] bg-[#102A52] px-5 py-4 font-black text-white transition hover:bg-[#1A3A6B] disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={loading || codigo.length < 6}
+          onClick={verificarCodigo}
           type="button"
         >
-          Cancelar
+          {loading ? 'Verificando...' : 'Verificar codigo'}
         </button>
 
+        <div className="mt-5 rounded-[1.25rem] bg-[#F1F5F9] px-4 py-3 text-center">
+          <p className="text-sm font-black text-[#102A52]">
+            Expira en {minutos}:{segundos}
+          </p>
+          {countdown === 0 ? (
+            <button
+              className="mt-2 text-sm font-black text-[#2563EB] hover:text-[#102A52]"
+              disabled={loading}
+              onClick={reenviar}
+              type="button"
+            >
+              Reenviar codigo
+            </button>
+          ) : (
+            <p className="mt-2 text-sm text-[#64748B]">
+              No recibiste el codigo? Reenviar en {countdown}s
+            </p>
+          )}
+        </div>
+
         {!enviado && !error && (
-          <p className="mt-3 text-xs text-gray-400">Enviando SMS...</p>
+          <p className="mt-3 text-center text-xs font-semibold text-[#94A3B8]">
+            Enviando SMS...
+          </p>
         )}
       </div>
     </div>

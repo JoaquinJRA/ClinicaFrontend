@@ -1,10 +1,16 @@
 import { Link, useNavigate } from "react-router-dom";
-import { KeyRound, Lock, Phone, PlusSquare } from "lucide-react";
+import {
+  ArrowRight,
+  KeyRound,
+  Lock,
+  Mail,
+  MessageCircle,
+  Phone,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import Button from "../../components/Button";
-import Input from "../../components/Input";
 import AuthLayout from "./AuthLayout";
 import {
   loginRequest,
@@ -18,6 +24,9 @@ const ROLE_REDIRECT = {
   MEDICO: "/doctor/appointments",
   ADMIN: "/admin/users",
 };
+
+const inputBase =
+  "w-full rounded-[1.35rem] border border-transparent bg-[#F2F5F9] py-4 pl-12 pr-4 text-sm text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-[#2563EB] focus:bg-white focus:ring-4 focus:ring-[#2563EB]/10";
 
 function Login() {
   const navigate = useNavigate();
@@ -44,11 +53,8 @@ function Login() {
       const { usuario } = res.data;
 
       setUsuario(usuario);
-
       toast.success(`Bienvenido, ${usuario.nombre}!`);
-
-      const ruta = ROLE_REDIRECT[usuario.rol] ?? "/";
-      navigate(ruta);
+      navigate(ROLE_REDIRECT[usuario.rol] ?? "/");
     } catch (err) {
       const msg =
         err.response?.data?.message ??
@@ -125,157 +131,185 @@ function Login() {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout mode="login">
       <form
-        className="w-full max-w-140 rounded-3xl bg-white p-10 shadow-xl"
+        className="relative w-full max-w-[34rem] overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 p-7 shadow-[0_28px_90px_rgba(15,23,42,0.18)] backdrop-blur md:p-9"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="mb-10">
-          <div className="mb-8 flex items-center gap-3">
-            <PlusSquare className="h-8 w-8 text-[#2563EB]" strokeWidth={2.5} />
-            <span className="text-xl font-bold text-[#1A3A6B]">
-              Clinica Luz
-            </span>
+        <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[4rem] bg-[#DBEAFE]" />
+        <div className="relative">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-[#EAF2FF] px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#1A3A6B]">
+            Portal Clinica Luz
           </div>
-          <h1 className="text-3xl font-bold text-[#1A3A6B]">
-            Bienvenido de Vuelta
+          <h1 className="max-w-sm text-4xl font-black leading-tight text-[#102A52]">
+            Vuelva a su panel medico.
           </h1>
-          <p className="mt-3 text-sm leading-6 text-[#6B7280]">
-            Inicie Sesion para acceder a sus citas y registros medicos.
+          <p className="mt-3 max-w-md text-sm leading-6 text-[#64748B]">
+            Ingrese con su correo para revisar citas, tratamientos y gestion
+            clinica segun su rol.
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="relative mt-9 space-y-5">
           <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-[#111827]">
-              Correo Electronico
+            <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
+              Correo electronico
             </span>
-            <Input
-              type="email"
-              placeholder="paciente@ejemplo.com"
-              {...register("email", {
-                required: "El correo es obligatorio.",
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Ingrese un correo valido.",
-                },
-              })}
-            />
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2563EB]" />
+              <input
+                className={inputBase}
+                placeholder="paciente@ejemplo.com"
+                type="email"
+                {...register("email", {
+                  required: "El correo es obligatorio.",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Ingrese un correo valido.",
+                  },
+                })}
+              />
+            </div>
             {errors.email && (
-              <p className="mt-1 text-xs text-red-500">
+              <p className="mt-2 text-xs font-semibold text-red-500">
                 {errors.email.message}
               </p>
             )}
           </label>
 
           <label className="block">
-            <span className="mb-2 flex items-center justify-between text-sm font-semibold text-[#111827]">
+            <span className="mb-2 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
               Contrasena
               <button
-                className="font-medium text-[#2563EB] hover:text-[#1A3A6B]"
+                className="rounded-full bg-white px-3 py-1 text-[11px] tracking-normal text-[#2563EB] shadow-sm transition hover:bg-[#EAF2FF]"
                 onClick={() => setShowRecoveryPhone(true)}
                 type="button"
               >
-                Olvido su contrasena?
+                Olvido?
               </button>
             </span>
-            <Input
-              type="password"
-              placeholder="Ingrese su contrasena"
-              {...register("contrasena", {
-                required: "La contrasena es obligatoria.",
-              })}
-            />
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2563EB]" />
+              <input
+                className={inputBase}
+                placeholder="Ingrese su contrasena"
+                type="password"
+                {...register("contrasena", {
+                  required: "La contrasena es obligatoria.",
+                })}
+              />
+            </div>
             {errors.contrasena && (
-              <p className="mt-1 text-xs text-red-500">
+              <p className="mt-2 text-xs font-semibold text-red-500">
                 {errors.contrasena.message}
               </p>
             )}
           </label>
         </div>
 
-        <Button className="mt-8 w-full" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Iniciando sesion..." : "Iniciar sesion ->"}
-        </Button>
+        <button
+          className="mt-8 flex w-full items-center justify-center gap-3 rounded-[1.35rem] bg-[#102A52] px-6 py-4 font-black text-white shadow-[0_16px_32px_rgba(26,58,107,0.25)] transition hover:-translate-y-0.5 hover:bg-[#1A3A6B] disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isSubmitting}
+          type="submit"
+        >
+          {isSubmitting ? "Iniciando sesion..." : "Entrar al portal"}
+          <ArrowRight className="h-5 w-5" />
+        </button>
 
-        <p className="mt-8 text-center text-sm text-[#6B7280]">
-          No tiene una cuenta?{" "}
-          <Link
-            className="font-semibold text-[#2563EB] hover:text-[#1A3A6B]"
-            to="/register"
-          >
-            Registrarse
+        <div className="mt-7 flex items-center justify-between gap-3 rounded-[1.5rem] border border-[#E2E8F0] bg-white/70 px-4 py-3 text-sm text-[#64748B]">
+          <span>No tiene cuenta?</span>
+          <Link className="font-black text-[#2563EB] hover:text-[#102A52]" to="/register">
+            Crear acceso
           </Link>
-        </p>
+        </div>
       </form>
 
       {showRecoveryPhone && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-96 max-w-full rounded-3xl bg-white p-8 text-center shadow-xl">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#EAF2FF] text-[#2563EB]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#071426]/70 px-4 backdrop-blur-sm">
+          <div className="relative w-[27rem] max-w-full overflow-hidden rounded-[2rem] bg-white p-7 shadow-[0_28px_90px_rgba(15,23,42,0.35)]">
+            <button
+              className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B] transition hover:bg-[#E2E8F0]"
+              onClick={limpiarRecuperacion}
+              type="button"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EAF2FF] text-[#2563EB]">
               <Phone className="h-8 w-8" />
             </div>
-            <h2 className="text-2xl font-bold text-[#1A3A6B]">
-              Recuperar contrasena
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#2563EB]">
+              Recuperacion SMS
+            </p>
+            <h2 className="mt-2 text-3xl font-black text-[#102A52]">
+              Confirme su telefono.
             </h2>
-            <p className="mt-3 text-sm leading-6 text-[#6B7280]">
-              Ingresa tu telefono y enviaremos un codigo por SMS.
+            <p className="mt-3 text-sm leading-6 text-[#64748B]">
+              Enviaremos un codigo temporal para permitir el cambio de
+              contrasena.
             </p>
 
-            <label className="mt-6 block text-left">
-              <span className="mb-2 block text-xs font-bold uppercase text-[#9CA3AF]">
+            <label className="mt-6 block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
                 Telefono
               </span>
-              <Input
-                autoFocus
-                onChange={(event) => setRecoveryPhone(event.target.value)}
-                placeholder="+51 999 999 999"
-                type="tel"
-                value={recoveryPhone}
-              />
+              <div className="relative">
+                <MessageCircle className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2563EB]" />
+                <input
+                  autoFocus
+                  className={inputBase}
+                  onChange={(event) => setRecoveryPhone(event.target.value)}
+                  placeholder="+51 999 999 999"
+                  type="tel"
+                  value={recoveryPhone}
+                />
+              </div>
             </label>
 
             <button
-              className="mt-6 w-full rounded-xl bg-[#1A3A6B] px-5 py-3 font-bold text-white transition hover:bg-[#14305A] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-6 w-full rounded-[1.25rem] bg-[#102A52] px-5 py-4 font-black text-white transition hover:bg-[#1A3A6B] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={recoveryLoading}
               onClick={handleSolicitarRecuperacion}
               type="button"
             >
               {recoveryLoading ? "Enviando..." : "Enviar codigo"}
             </button>
-
-            <button
-              className="mt-5 text-sm font-semibold text-[#6B7280] hover:text-[#111827]"
-              onClick={limpiarRecuperacion}
-              type="button"
-            >
-              Volver
-            </button>
           </div>
         </div>
       )}
 
       {showNewPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-[28rem] max-w-full rounded-3xl bg-white p-8 shadow-xl">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#EAF2FF] text-[#2563EB]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#071426]/70 px-4 backdrop-blur-sm">
+          <div className="relative w-[30rem] max-w-full overflow-hidden rounded-[2rem] bg-white p-7 shadow-[0_28px_90px_rgba(15,23,42,0.35)]">
+            <button
+              className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B] transition hover:bg-[#E2E8F0]"
+              onClick={() => {
+                setShowNewPassword(false);
+                setShowRecoveryPhone(true);
+              }}
+              type="button"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EAF2FF] text-[#2563EB]">
               <KeyRound className="h-8 w-8" />
             </div>
-            <h2 className="text-center text-2xl font-bold text-[#1A3A6B]">
-              {codigoCompleto ? "Nueva contrasena" : "Codigo de verificacion"}
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#2563EB]">
+              {codigoCompleto ? "Nueva clave" : "Codigo de acceso"}
+            </p>
+            <h2 className="mt-2 text-3xl font-black text-[#102A52]">
+              {codigoCompleto ? "Cree una nueva contrasena." : "Ingrese el codigo SMS."}
             </h2>
-            <p className="mt-3 text-center text-sm text-[#6B7280]">
-              Codigo enviado a{" "}
-              <span className="font-bold text-[#2563EB]">{recoveryPhone}</span>
+            <p className="mt-3 text-sm text-[#64748B]">
+              Enviado a <span className="font-black text-[#2563EB]">{recoveryPhone}</span>
             </p>
 
             <label className="mt-6 block">
-              <span className="mb-2 block text-xs font-bold uppercase text-[#9CA3AF]">
+              <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
                 Codigo de verificacion
               </span>
               <input
                 autoFocus
-                className="w-full rounded-xl border border-[#BFDBFE] bg-white px-4 py-3 text-center text-2xl font-bold text-[#1A3A6B] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#EAF2FF]"
+                className="w-full rounded-[1.25rem] border border-[#BFDBFE] bg-[#F8FAFC] px-4 py-4 text-center text-2xl font-black text-[#102A52] outline-none transition focus:border-[#2563EB] focus:bg-white focus:ring-4 focus:ring-[#2563EB]/10"
                 inputMode="numeric"
                 maxLength={6}
                 onChange={(event) => setCodigo(event.target.value.replace(/\D/g, ""))}
@@ -287,21 +321,22 @@ function Login() {
             </label>
 
             {!codigoCompleto && (
-              <p className="mt-4 text-center text-sm text-[#6B7280]">
-                Ingresa los 6 digitos para continuar.
+              <p className="mt-4 rounded-2xl bg-[#F1F5F9] px-4 py-3 text-center text-sm text-[#64748B]">
+                Al completar los 6 digitos aparecera el formulario de nueva
+                contrasena.
               </p>
             )}
 
             {codigoCompleto && (
               <>
                 <label className="mt-5 block">
-                  <span className="mb-2 block text-xs font-bold uppercase text-[#9CA3AF]">
+                  <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
                     Nueva contrasena
                   </span>
                   <div className="relative">
-                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9CA3AF]" />
+                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2563EB]" />
                     <input
-                      className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-12 pr-4 text-sm outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#EAF2FF]"
+                      className={inputBase}
                       onChange={(event) => setNuevaContrasena(event.target.value)}
                       placeholder="Minimo 6 caracteres"
                       type="password"
@@ -311,13 +346,13 @@ function Login() {
                 </label>
 
                 <label className="mt-5 block">
-                  <span className="mb-2 block text-xs font-bold uppercase text-[#9CA3AF]">
+                  <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
                     Confirmar contrasena
                   </span>
                   <div className="relative">
-                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9CA3AF]" />
+                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2563EB]" />
                     <input
-                      className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-12 pr-4 text-sm outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#EAF2FF]"
+                      className={inputBase}
                       onChange={(event) =>
                         setConfirmarContrasena(event.target.value)
                       }
@@ -329,7 +364,7 @@ function Login() {
                 </label>
 
                 <button
-                  className="mt-7 w-full rounded-xl bg-[#1A3A6B] px-5 py-3 font-bold text-white transition hover:bg-[#14305A] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-7 w-full rounded-[1.25rem] bg-[#102A52] px-5 py-4 font-black text-white transition hover:bg-[#1A3A6B] disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={recoveryLoading}
                   onClick={handleActualizarContrasena}
                   type="button"
@@ -338,17 +373,6 @@ function Login() {
                 </button>
               </>
             )}
-
-            <button
-              className="mx-auto mt-5 block text-sm font-semibold text-[#9CA3AF] hover:text-[#111827]"
-              onClick={() => {
-                setShowNewPassword(false);
-                setShowRecoveryPhone(true);
-              }}
-              type="button"
-            >
-              Volver
-            </button>
           </div>
         </div>
       )}
