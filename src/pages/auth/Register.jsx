@@ -104,12 +104,12 @@ function Register() {
             </h1>
             <p className="mt-3 max-w-xl text-sm leading-6 text-[#64748B]">
               Complete sus datos personales. Al presionar registrar,
-              verificaremos su telefono por SMS antes de guardar la cuenta.
+              verificaremos su teléfono por SMS antes de guardar la cuenta.
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-[1.25rem] border border-[#E2E8F0] bg-white px-4 py-3 text-sm font-black text-[#102A52]">
             <ShieldCheck className="h-5 w-5 text-[#2563EB]" />
-            {telefonoVerificado ? "Telefono verificado" : "SMS pendiente"}
+            {telefonoVerificado ? "Teléfono verificado" : "SMS pendiente"}
           </div>
         </div>
 
@@ -232,14 +232,14 @@ function Register() {
               </label>
 
               <label>
-                <span className={labelClass}>Telefono</span>
+                <span className={labelClass}>Teléfono</span>
                 <div className="relative">
                   <FieldIcon icon={Phone} />
                   <input
                     className={`${inputBase} ${telefonoVerificado ? "pr-28" : ""}`}
                     placeholder="+51 999 999 999"
                     {...register("telefono", {
-                      required: "El telefono es obligatorio.",
+                      required: "El teléfono es obligatorio.",
                       onChange: () => {
                         setTelefonoVerificado(false);
                         setTelefonoFormateado("");
@@ -261,7 +261,7 @@ function Register() {
               </label>
 
               <label className="md:col-span-2">
-                <span className={labelClass}>Direccion</span>
+                <span className={labelClass}>Dirección</span>
                 <div className="relative">
                   <FieldIcon icon={MapPin} />
                   <input
@@ -353,7 +353,6 @@ function Register() {
             {isSubmitting || registrandoVerificado
               ? "Registrando..."
               : "Registrar y verificar"}
-            <ArrowRight className="h-5 w-5" />
           </button>
         </div>
       </form>
