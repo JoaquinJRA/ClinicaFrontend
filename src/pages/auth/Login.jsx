@@ -58,7 +58,7 @@ function Login() {
     } catch (err) {
       const msg =
         err.response?.data?.message ??
-        "Error al iniciar sesion. Intente de nuevo.";
+        "Error al iniciar sesión. Intente de nuevo.";
       toast.error(msg);
     }
   };
@@ -81,7 +81,7 @@ function Login() {
     try {
       setRecoveryLoading(true);
       await solicitarRecuperacionRequest({ telefono: recoveryPhone });
-      toast.success("Codigo enviado por SMS.");
+      toast.success("Código enviado por SMS.");
       setCodigo("");
       setNuevaContrasena("");
       setConfirmarContrasena("");
@@ -89,7 +89,7 @@ function Login() {
       setShowNewPassword(true);
     } catch (err) {
       const msg =
-        err.response?.data?.message ?? "No se pudo enviar el codigo.";
+        err.response?.data?.message ?? "No se pudo enviar el código.";
       toast.error(msg);
     } finally {
       setRecoveryLoading(false);
@@ -98,17 +98,17 @@ function Login() {
 
   const handleActualizarContrasena = async () => {
     if (codigo.length !== 6) {
-      toast.error("Ingresa el codigo de 6 digitos.");
+      toast.error("Ingresa el código de 6 dígitos.");
       return;
     }
 
     if (nuevaContrasena.length < 6) {
-      toast.error("La contrasena debe tener minimo 6 caracteres.");
+      toast.error("La contraseña debe tener mínimo 6 caracteres.");
       return;
     }
 
     if (nuevaContrasena !== confirmarContrasena) {
-      toast.error("Las contrasenas no coinciden.");
+      toast.error("Las contraseñas no coinciden.");
       return;
     }
 
@@ -119,11 +119,11 @@ function Login() {
         codigo,
         nuevaContrasena,
       });
-      toast.success("Contrasena actualizada correctamente.");
+      toast.success("Contraseña actualizada correctamente.");
       limpiarRecuperacion();
     } catch (err) {
       const msg =
-        err.response?.data?.message ?? "No se pudo actualizar la contrasena.";
+        err.response?.data?.message ?? "No se pudo actualizar la contraseña.";
       toast.error(msg);
     } finally {
       setRecoveryLoading(false);
@@ -145,8 +145,7 @@ function Login() {
             Vuelva a su panel medico.
           </h1>
           <p className="mt-3 max-w-md text-sm leading-6 text-[#64748B]">
-            Ingrese con su correo para revisar citas, tratamientos y gestion
-            clinica segun su rol.
+            Ingrese con su correo para revisar citas y tratamientos.
           </p>
         </div>
 
@@ -185,17 +184,17 @@ function Login() {
                 onClick={() => setShowRecoveryPhone(true)}
                 type="button"
               >
-                Olvido?
+                Olvide mi contraseña
               </button>
             </span>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2563EB]" />
               <input
                 className={inputBase}
-                placeholder="Ingrese su contrasena"
+                placeholder="Ingrese su contraseña"
                 type="password"
                 {...register("contrasena", {
-                  required: "La contrasena es obligatoria.",
+                  required: "La contraseña es obligatoria.",
                 })}
               />
             </div>
@@ -212,14 +211,13 @@ function Login() {
           disabled={isSubmitting}
           type="submit"
         >
-          {isSubmitting ? "Iniciando sesion..." : "Entrar al portal"}
-          <ArrowRight className="h-5 w-5" />
+          {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
         </button>
 
         <div className="mt-7 flex items-center justify-between gap-3 rounded-[1.5rem] border border-[#E2E8F0] bg-white/70 px-4 py-3 text-sm text-[#64748B]">
-          <span>No tiene cuenta?</span>
+          <span>No tiene una cuenta?</span>
           <Link className="font-black text-[#2563EB] hover:text-[#102A52]" to="/register">
-            Crear acceso
+            Crear una cuenta
           </Link>
         </div>
       </form>
@@ -245,7 +243,7 @@ function Login() {
             </h2>
             <p className="mt-3 text-sm leading-6 text-[#64748B]">
               Enviaremos un codigo temporal para permitir el cambio de
-              contrasena.
+              contraseña.
             </p>
 
             <label className="mt-6 block">
@@ -323,7 +321,7 @@ function Login() {
             {!codigoCompleto && (
               <p className="mt-4 rounded-2xl bg-[#F1F5F9] px-4 py-3 text-center text-sm text-[#64748B]">
                 Al completar los 6 digitos aparecera el formulario de nueva
-                contrasena.
+                contraseña.
               </p>
             )}
 
@@ -331,7 +329,7 @@ function Login() {
               <>
                 <label className="mt-5 block">
                   <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
-                    Nueva contrasena
+                    Nueva contraseña
                   </span>
                   <div className="relative">
                     <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2563EB]" />
@@ -347,7 +345,7 @@ function Login() {
 
                 <label className="mt-5 block">
                   <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">
-                    Confirmar contrasena
+                    Confirmar contraseña
                   </span>
                   <div className="relative">
                     <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2563EB]" />
@@ -356,7 +354,7 @@ function Login() {
                       onChange={(event) =>
                         setConfirmarContrasena(event.target.value)
                       }
-                      placeholder="Repita la contrasena"
+                      placeholder="Repita la contraseña"
                       type="password"
                       value={confirmarContrasena}
                     />
@@ -369,7 +367,7 @@ function Login() {
                   onClick={handleActualizarContrasena}
                   type="button"
                 >
-                  {recoveryLoading ? "Actualizando..." : "Actualizar contrasena"}
+                  {recoveryLoading ? "Actualizando..." : "Actualizar contraseña"}
                 </button>
               </>
             )}
