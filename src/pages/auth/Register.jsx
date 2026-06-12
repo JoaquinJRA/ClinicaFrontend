@@ -1,9 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { PlusSquare } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
+import PhoneVerificationModal from "../../components/PhoneVerificationModal";
 import AuthLayout from "./AuthLayout";
 import { registerRequest } from "../../api/auth.api";
 
@@ -13,27 +15,58 @@ const GENDER_OPTIONS = [
   { value: "OTRO", label: "Otro" },
 ];
 
+const formatearTelefono = (tel) => {
+  const limpio = String(tel || "").replace(/\D/g, "");
+  return limpio.startsWith("51") ? `+${limpio}` : `+51${limpio}`;
+};
+
 function Register() {
   const navigate = useNavigate();
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [telefonoVerificado, setTelefonoVerificado] = useState(false);
+  const [telefonoFormateado, setTelefonoFormateado] = useState("");
+  const [payloadPendiente, setPayloadPendiente] = useState(null);
+  const [registrandoVerificado, setRegistrandoVerificado] = useState(false);
 
   const {
     register,
     handleSubmit,
     getValues,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // eslint-disable-next-line no-unused-vars
-  const onSubmit = async ({ confirmarContrasena: _, ...payload }) => {
+  const telefonoActual = watch("telefono");
+
+  const registrarPaciente = async (payload) => {
     try {
-      await registerRequest(payload);
-      toast.success("¡Cuenta creada correctamente!");
-      navigate("/dashboard");
+      setRegistrandoVerificado(true);
+      await registerRequest({
+        ...payload,
+        telefono: telefonoFormateado || formatearTelefono(payload.telefono),
+        telefonoVerificado: true,
+      });
+      toast.success("Cuenta creada correctamente.");
+      navigate("/login");
     } catch (err) {
       const msg =
         err.response?.data?.message ?? "Error al registrar. Intente de nuevo.";
       toast.error(msg);
+    } finally {
+      setRegistrandoVerificado(false);
     }
+  };
+
+  const onSubmit = async ({ confirmarContrasena: _, ...payload }) => {
+    if (!telefonoVerificado) {
+      const telefono = formatearTelefono(payload.telefono);
+      setTelefonoFormateado(telefono);
+      setPayloadPendiente(payload);
+      setShowPhoneModal(true);
+      return;
+    }
+
+    await registrarPaciente(payload);
   };
 
   return (
@@ -42,22 +75,20 @@ function Register() {
         onSubmit={handleSubmit(onSubmit)}
         className="w-full max-w-160 rounded-3xl bg-white p-10 shadow-xl"
       >
-        {/* Encabezado */}
         <div className="mb-8">
           <div className="mb-7 flex items-center gap-3">
             <PlusSquare className="h-8 w-8 text-[#2563EB]" strokeWidth={2.5} />
             <span className="text-xl font-bold text-[#1A3A6B]">
-              Clínica Luz
+              Clinica Luz
             </span>
           </div>
           <h1 className="text-3xl font-bold text-[#1A3A6B]">Crear Cuenta</h1>
           <p className="mt-3 text-sm leading-6 text-[#6B7280]">
-            Complete sus datos para acceder al portal.
+            Complete sus datos y verifique su telefono para acceder al portal.
           </p>
         </div>
 
         <div className="space-y-5">
-          {/* Nombre / Apellido */}
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-[#111827]">
@@ -81,7 +112,7 @@ function Register() {
                 Apellido
               </span>
               <Input
-                placeholder="García"
+                placeholder="Garcia"
                 {...register("apellido", {
                   required: "El apellido es obligatorio.",
                 })}
@@ -94,7 +125,6 @@ function Register() {
             </label>
           </div>
 
-          {/* DNI */}
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-[#111827]">
               DNI
@@ -105,7 +135,7 @@ function Register() {
                 required: "El DNI es obligatorio.",
                 pattern: {
                   value: /^\d{8}$/,
-                  message: "El DNI debe tener 8 dígitos.",
+                  message: "El DNI debe tener 8 digitos.",
                 },
               })}
             />
@@ -114,10 +144,9 @@ function Register() {
             )}
           </label>
 
-          {/* Email */}
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-[#111827]">
-              Correo Electrónico
+              Correo Electronico
             </span>
             <Input
               type="email"
@@ -126,7 +155,7 @@ function Register() {
                 required: "El correo es obligatorio.",
                 pattern: {
                   value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Ingrese un correo válido.",
+                  message: "Ingrese un correo valido.",
                 },
               })}
             />
@@ -137,23 +166,43 @@ function Register() {
             )}
           </label>
 
-          {/* Teléfono */}
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-[#111827]">
-              Teléfono
+              Telefono
             </span>
-            <Input placeholder="+51 999 999 999" {...register("telefono")} />
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                className="flex-1"
+                placeholder="+51 999 999 999"
+                {...register("telefono", {
+                  required: "El telefono es obligatorio.",
+                  onChange: () => {
+                    setTelefonoVerificado(false);
+                    setTelefonoFormateado("");
+                    setPayloadPendiente(null);
+                  },
+                })}
+              />
+              {telefonoVerificado && (
+                <span className="inline-flex items-center justify-center rounded-xl bg-green-50 px-4 py-2 text-sm font-bold text-green-700">
+                  Verificado
+                </span>
+              )}
+            </div>
+            {errors.telefono && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.telefono.message}
+              </p>
+            )}
           </label>
 
-          {/* Dirección */}
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-[#111827]">
-              Dirección
+              Direccion
             </span>
             <Input placeholder="Av. Luz 123, Lima" {...register("direccion")} />
           </label>
 
-          {/* Fecha de nacimiento / Género */}
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-[#111827]">
@@ -164,13 +213,13 @@ function Register() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-[#111827]">
-                Género
+                Genero
               </span>
               <select
                 className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-[#111827] focus:border-[#2563EB] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
-                {...register("genero", { required: "Seleccione un género." })}
+                {...register("genero", { required: "Seleccione un genero." })}
               >
-                <option value="">Seleccionar…</option>
+                <option value="">Seleccionar...</option>
                 {GENDER_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
@@ -185,18 +234,17 @@ function Register() {
             </label>
           </div>
 
-          {/* Contraseña / Confirmar */}
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-[#111827]">
-                Contraseña
+                Contrasena
               </span>
               <Input
                 type="password"
-                placeholder="Ingrese su contraseña"
+                placeholder="Ingrese su contrasena"
                 {...register("contrasena", {
-                  required: "La contraseña es obligatoria.",
-                  minLength: { value: 6, message: "Mínimo 6 caracteres." },
+                  required: "La contrasena es obligatoria.",
+                  minLength: { value: 6, message: "Minimo 6 caracteres." },
                 })}
               />
               {errors.contrasena && (
@@ -208,16 +256,16 @@ function Register() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-[#111827]">
-                Confirmar Contraseña
+                Confirmar Contrasena
               </span>
               <Input
                 type="password"
-                placeholder="Repita su contraseña"
+                placeholder="Repita su contrasena"
                 {...register("confirmarContrasena", {
-                  required: "Confirme su contraseña.",
+                  required: "Confirme su contrasena.",
                   validate: (val) =>
                     val === getValues("contrasena") ||
-                    "Las contraseñas no coinciden.",
+                    "Las contrasenas no coinciden.",
                 })}
               />
               {errors.confirmarContrasena && (
@@ -229,20 +277,41 @@ function Register() {
           </div>
         </div>
 
-        <Button className="mt-8 w-full" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Registrando…" : "Registrarse →"}
+        <Button
+          className="mt-8 w-full"
+          type="submit"
+          disabled={isSubmitting || registrandoVerificado}
+        >
+          {isSubmitting || registrandoVerificado
+            ? "Registrando..."
+            : "Registrarse ->"}
         </Button>
 
         <p className="mt-7 text-center text-sm text-[#6B7280]">
-          ¿Ya tiene una cuenta?{" "}
+          Ya tiene una cuenta?{" "}
           <Link
             className="font-semibold text-[#2563EB] hover:text-[#1A3A6B]"
             to="/login"
           >
-            Iniciar sesión
+            Iniciar sesion
           </Link>
         </p>
       </form>
+
+      {showPhoneModal && (
+        <PhoneVerificationModal
+          telefono={telefonoFormateado || formatearTelefono(telefonoActual)}
+          onVerificado={async () => {
+            setTelefonoVerificado(true);
+            setShowPhoneModal(false);
+            if (payloadPendiente) {
+              await registrarPaciente(payloadPendiente);
+              setPayloadPendiente(null);
+            }
+          }}
+          onCerrar={() => setShowPhoneModal(false)}
+        />
+      )}
     </AuthLayout>
   );
 }

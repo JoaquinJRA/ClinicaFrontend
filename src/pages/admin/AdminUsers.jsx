@@ -91,6 +91,9 @@ function AdminUsers() {
   const [showModal, setShowModal] = useState(false)
   const [modalTipo, setModalTipo] = useState('crear')
   const [usuarioSel, setUsuarioSel] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [usuarioEliminar, setUsuarioEliminar] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
   const [especialidades, setEspecialidades] = useState([])
   const [form, setForm] = useState(formInicial)
 
@@ -263,6 +266,38 @@ function AdminUsers() {
     await fetchUsuarios()
   }
 
+  const abrirEliminar = (usuario) => {
+    setUsuarioEliminar(usuario)
+    setShowDeleteModal(true)
+  }
+
+  const cerrarEliminar = () => {
+    if (eliminando) return
+    setShowDeleteModal(false)
+    setUsuarioEliminar(null)
+  }
+
+  const confirmarEliminar = async () => {
+    if (!usuarioEliminar) return
+
+    try {
+      setEliminando(true)
+      await api.delete(`/admin/usuarios/${usuarioEliminar.id}`)
+      await fetchUsuarios()
+      setShowDeleteModal(false)
+      setUsuarioEliminar(null)
+    } catch (err) {
+      if (err.response?.status === 409) {
+        alert('No se puede eliminar: el usuario tiene citas pendientes o confirmadas')
+        return
+      }
+      alert('No se pudo eliminar el usuario. Intenta nuevamente.')
+    } finally {
+      setEliminando(false)
+    }
+  }
+
+  /*
   const handleEliminar = async (id) => {
     if (!confirm('¿Eliminar este usuario?')) return
 
@@ -278,6 +313,7 @@ function AdminUsers() {
     }
   }
 
+  */
   const mostrarCamposPaciente = form.rol === 'PACIENTE'
   const mostrarCamposMedico = form.rol === 'MEDICO'
 
@@ -366,7 +402,7 @@ function AdminUsers() {
                       </button>
                       <button
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-[#EF4444]"
-                        onClick={() => handleEliminar(usuario.id)}
+                        onClick={() => abrirEliminar(usuario)}
                         type="button"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -693,6 +729,42 @@ function AdminUsers() {
           </div>
         )}
       </Modal>
+
+      {showDeleteModal && usuarioEliminar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-[#EF4444]">
+              <Trash2 className="h-8 w-8" />
+            </div>
+            <h2 className="text-2xl font-bold text-[#1A3A6B]">Eliminar usuario</h2>
+            <p className="mt-3 text-sm leading-6 text-[#6B7280]">
+              ¿Estás seguro de eliminar a{' '}
+              <span className="font-bold text-[#111827]">
+                {getUsuarioNombre(usuarioEliminar)}
+              </span>
+              ? Esta acción desactivará su cuenta si no tiene citas pendientes o confirmadas.
+            </p>
+            <div className="mt-7 grid grid-cols-2 gap-3">
+              <button
+                className="rounded-full bg-gray-100 px-5 py-3 font-semibold text-[#6B7280] transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={eliminando}
+                onClick={cerrarEliminar}
+                type="button"
+              >
+                No
+              </button>
+              <button
+                className="rounded-full bg-[#EF4444] px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={eliminando}
+                onClick={confirmarEliminar}
+                type="button"
+              >
+                {eliminando ? 'Eliminando...' : 'Aceptar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

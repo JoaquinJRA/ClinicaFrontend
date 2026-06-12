@@ -2,9 +2,9 @@ import {
   Activity,
   AlertTriangle,
   ArrowUpDown,
+  CalendarDays,
   ClipboardList,
   Droplets,
-  FileText,
   Scale,
   User,
 } from "lucide-react";
@@ -38,7 +38,7 @@ const alergiaDotBySeveridad = {
 };
 
 const formatFechaNacimiento = (fechaNacimiento) => {
-  if (!fechaNacimiento) return "—";
+  if (!fechaNacimiento) return "-";
 
   return new Date(fechaNacimiento).toLocaleDateString("es-PE", {
     day: "numeric",
@@ -47,16 +47,25 @@ const formatFechaNacimiento = (fechaNacimiento) => {
   });
 };
 
+const formatFechaConsulta = (fecha) =>
+  new Date(fecha).toLocaleDateString("es-PE", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
 function PatientDashboard() {
   const usuario = useAuthStore((s) => s.usuario);
   const pacienteId = usuario?.pacienteId ?? usuario?.paciente?.id;
   const [data, setData] = useState(null);
+  const [historial, setHistorial] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchPerfil = useCallback(async () => {
     if (!pacienteId) {
       setData(null);
+      setHistorial([]);
       setError("No se pudo identificar al paciente.");
       setLoading(false);
       return;
@@ -65,12 +74,16 @@ function PatientDashboard() {
     try {
       setLoading(true);
       setError("");
-      const res = await api.get(`/pacientes/${pacienteId}/perfil`);
-      setData(res.data);
+      const [perfilRes, historialRes] = await Promise.all([
+        api.get(`/pacientes/${pacienteId}/perfil`),
+        api.get(`/pacientes/${pacienteId}/historial`),
+      ]);
+      setData(perfilRes.data);
+      setHistorial(historialRes.data.slice(0, 3));
     } catch (err) {
       setError(
         err.response?.data?.message ??
-          "No se pudo cargar la información del paciente.",
+          "No se pudo cargar la informacion del paciente.",
       );
     } finally {
       setLoading(false);
@@ -85,22 +98,22 @@ function PatientDashboard() {
     () => [
       {
         icon: Droplets,
-        value: data?.grupoSanguineo ?? "—",
-        label: "Grupo Sanguíneo",
+        value: data?.grupoSanguineo ?? "-",
+        label: "Grupo Sanguineo",
       },
       {
         icon: Scale,
-        value: data?.peso ? `${data.peso} kg` : "—",
+        value: data?.peso ? `${data.peso} kg` : "-",
         label: "Peso",
       },
       {
         icon: ArrowUpDown,
-        value: data?.altura ? `${data.altura} cm` : "—",
+        value: data?.altura ? `${data.altura} cm` : "-",
         label: "Altura",
       },
       {
         icon: Activity,
-        value: data?.presionArterial ?? "—",
+        value: data?.presionArterial ?? "-",
         label: "Hemoglobina",
       },
     ],
@@ -130,7 +143,6 @@ function PatientDashboard() {
 
   return (
     <div className="mx-auto grid max-w-295 grid-cols-1 gap-6 xl:grid-cols-[35%_1fr]">
-      {/* Columna de perfil e información general del paciente. */}
       <section className="space-y-5">
         <Card className="text-center">
           <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
@@ -155,17 +167,17 @@ function PatientDashboard() {
           </Card>
           <Card className="p-5">
             <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-              Género
+              Genero
             </p>
             <p className="mt-2 text-lg font-bold text-[#111827]">
-              {generoLabels[data.genero] ?? "—"}
+              {generoLabels[data.genero] ?? "-"}
             </p>
           </Card>
         </div>
 
         <Card>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Información General
+            Informacion General
           </h2>
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {generalInfo.map((item) => (
@@ -181,7 +193,6 @@ function PatientDashboard() {
         </Card>
       </section>
 
-      {/* Columna de resumen clínico, alergias y documentos. */}
       <section className="space-y-5">
         <Card className="border border-red-100 bg-red-50/60">
           <div className="mb-5 flex items-center gap-3">
@@ -258,46 +269,66 @@ function PatientDashboard() {
 
         <Card>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Historial médico
+            Historial Medico
           </h2>
-          <div className="mt-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
-              Enfermedades y/o operaciones previas
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {[
-                "Apendicectomía (2018)",
-                "Bronquitis (2008)",
-                "Asma (Niñez)",
-              ].map((item) => (
-                <Badge key={item}>{item}</Badge>
-              ))}
-            </div>
-          </div>
-          <div className="mt-6">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
-              Historial Médico
-            </p>
-            <div className="mt-3 rounded-2xl bg-gray-100 p-4 text-sm leading-6 text-[#6B7280]">
-              {data.historialMedico?.notasGenerales ??
-                "Sin notas en el historial"}
-            </div>
-          </div>
-        </Card>
+          <div className="mt-5 space-y-3">
+            {historial.length ? (
+              historial.map((consulta) => (
+                <div
+                  className="rounded-2xl bg-gray-50 p-4"
+                  key={consulta.id}
+                >
+                  <div className="flex gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                      <CalendarDays className="h-5 w-5 text-[#2563EB]" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                        {formatFechaConsulta(consulta.fecha)}
+                      </p>
+                      <p className="mt-1 font-bold text-[#111827]">
+                        Dr. {consulta.doctor} · {consulta.especialidad}
+                      </p>
+                      <p className="mt-1 text-sm text-[#6B7280]">
+                        {consulta.motivo}
+                      </p>
+                    </div>
+                  </div>
 
-        <Card className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
-            <FileText className="h-8 w-8 text-[#2563EB]" />
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs font-bold uppercase text-gray-400">
+                        Diagnostico
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[#111827]">
+                        {consulta.diagnostico || "Sin diagnostico registrado"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs font-bold uppercase text-gray-400">
+                        Tratamiento
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[#111827]">
+                        {consulta.tratamiento || "Sin tratamiento registrado"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs font-bold uppercase text-gray-400">
+                        Receta
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[#111827]">
+                        {consulta.receta || "Sin receta emitida"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl bg-gray-100 p-4 text-sm leading-6 text-[#6B7280]">
+                Sin consultas registradas en el historial
+              </div>
+            )}
           </div>
-          <p className="font-semibold text-[#111827]">
-            Asegúrese de cargar sus documentos médicos previos.
-          </p>
-          <Button className="mt-5 bg-white text-[#1A3A6B] ring-1 ring-[#1A3A6B] hover:bg-blue-50">
-            + Seleccionar Archivos
-          </Button>
-          <p className="mt-4 text-xs font-medium text-[#6B7280]">
-            Formatos Permitidos: PDF, JPG, PNG (Max 20MB)
-          </p>
         </Card>
       </section>
     </div>

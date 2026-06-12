@@ -57,7 +57,6 @@ function PatientAppointments() {
   const pacienteId = usuario?.pacienteId ?? usuario?.paciente?.id
   const today = new Date()
   const todayKey = getDateKey(today)
-  const [viewMode, setViewMode] = useState('Mes')
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
   const [selectedDate, setSelectedDate] = useState(null)
@@ -70,6 +69,7 @@ function PatientAppointments() {
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [showEspecialidadModal, setShowEspecialidadModal] = useState(false)
+  const [showNoDoctorsModal, setShowNoDoctorsModal] = useState(false)
   const [motivo, setMotivo] = useState('')
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [citaToCancel, setCitaToCancel] = useState(null)
@@ -109,11 +109,11 @@ function PatientAppointments() {
   }, [especialidadId])
 
   const fetchSlots = useCallback(
-    async (fecha) => {
+    async (fecha, nextEspecialidadId = especialidadId) => {
       try {
         setLoadingSlots(true)
         const res = await api.get('/citas/slots-disponibles', {
-          params: { fecha, especialidadId },
+          params: { fecha, especialidadId: nextEspecialidadId },
         })
         setSlots(res.data)
       } finally {
@@ -145,26 +145,33 @@ function PatientAppointments() {
 
     setSelectedDate(fecha)
     setSelectedSlot(null)
-    fetchSlots(fecha)
+    setSlots([])
+    setShowEspecialidadModal(true)
   }
 
   const handleEspecialidadSelect = async (id) => {
-    if (id === especialidadId) {
+    if (!selectedDate) {
       setShowEspecialidadModal(false)
-      setShowModal(true)
       return
     }
 
-    setSelectedDate(null)
     setSelectedSlot(null)
     setSlots([])
+    setShowNoDoctorsModal(false)
     setEspecialidadId(id)
     setShowEspecialidadModal(false)
+
     const res = await api.get('/citas/disponibilidad-mes', {
       params: { year: currentYear, month: currentMonth + 1, especialidadId: id },
     })
     setMonthData(res.data)
-    toast('Especialidad actualizada. Elige una fecha y horario disponibles.')
+
+    if (res.data[selectedDate]?.totalSlots === 0) {
+      setShowNoDoctorsModal(true)
+      return
+    }
+
+    await fetchSlots(selectedDate, id)
   }
 
   const handleConfirmarCita = async () => {
@@ -210,6 +217,23 @@ function PatientAppointments() {
     setCitaToCancel(null)
     await fetchCitasPaciente()
     await fetchMes(currentYear, currentMonth)
+  }
+
+  const handleConfirmarEstadoCita = async (cita) => {
+    try {
+      const res = await api.put(`/citas/${cita.id}/estado`, {
+        estado: 'CONFIRMADA',
+      })
+      toast.success(
+        res.data?.smsEnviado
+          ? 'Cita confirmada. Se envio un SMS al paciente.'
+          : 'Cita confirmada.',
+      )
+      await fetchCitasPaciente()
+      await fetchMes(currentYear, currentMonth)
+    } catch (err) {
+      toast.error(err.response?.data?.message ?? 'No se pudo confirmar la cita.')
+    }
   }
 
   const handleOpenEdit = (cita) => {
@@ -312,6 +336,10 @@ function PatientAppointments() {
   const visibleSlots = selectedDate
     ? slots.filter((slot) => !isPastSlotToday(selectedDate, slot.time))
     : []
+  const noDoctoresDisponibles =
+    Boolean(selectedDate) &&
+    !loadingSlots &&
+    monthData[selectedDate]?.totalSlots === 0
 
   const citasActivas = citasPaciente.filter((cita) =>
     ESTADOS_ACTIVOS.includes(cita.estado),
@@ -382,22 +410,6 @@ function PatientAppointments() {
                 →
               </button>
             </div>
-            <div className="w-fit rounded-full bg-gray-100 p-1">
-              {['Mes', 'Semana'].map((mode) => (
-                <button
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    viewMode === mode
-                      ? 'bg-white text-[#2563EB] shadow-sm'
-                      : 'text-[#6B7280]'
-                  }`}
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  type="button"
-                >
-                  {mode}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Calendario visual del mes seleccionado. */}
@@ -417,6 +429,7 @@ function PatientAppointments() {
                 }
 
                 const isToday = cell.fecha === todayKey
+                const isSelected = cell.fecha === selectedDate
                 const hasBlueDot =
                   monthData[cell.fecha]?.hasAvailable === true
                 const hasRedDot = citasPaciente.some((cita) =>
@@ -436,7 +449,11 @@ function PatientAppointments() {
                   >
                     <span
                       className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
-                        isToday ? 'bg-[#1A3A6B] text-white' : 'text-[#111827]'
+                        isSelected
+                          ? 'bg-[#2563EB] text-white shadow-sm'
+                          : isToday
+                            ? 'bg-[#1A3A6B] text-white'
+                            : 'text-[#111827]'
                       }`}
                     >
                       {cell.day}
@@ -471,27 +488,39 @@ function PatientAppointments() {
                     Cargando horarios...
                   </p>
                 ) : (
-                  visibleSlots.map((slot) => (
-                    <button
-                      className={`rounded-full px-4 py-3 text-sm font-semibold transition ${
-                        selectedSlot?.time === slot.time
-                          ? 'bg-[#1A3A6B] text-white shadow-sm'
-                          : 'bg-gray-100 text-[#6B7280] hover:bg-blue-50 hover:text-[#2563EB]'
-                      } ${!slot.available ? 'cursor-not-allowed opacity-50' : ''}`}
-                      disabled={!slot.available}
-                      key={slot.time}
-                      onClick={() => setSelectedSlot(slot)}
-                      type="button"
-                    >
-                      {slot.time}
-                    </button>
-                  ))
+                  <>
+                    {visibleSlots.length && !noDoctoresDisponibles ? (
+                      visibleSlots.map((slot) => (
+                        <button
+                          className={`rounded-full px-4 py-3 text-sm font-semibold transition ${
+                            selectedSlot?.time === slot.time
+                              ? 'bg-[#1A3A6B] text-white shadow-sm'
+                              : 'bg-gray-100 text-[#6B7280] hover:bg-blue-50 hover:text-[#2563EB]'
+                          } ${!slot.available ? 'cursor-not-allowed opacity-50' : ''}`}
+                          disabled={!slot.available}
+                          key={slot.time}
+                          onClick={() => setSelectedSlot(slot)}
+                          type="button"
+                        >
+                          {slot.time}
+                        </button>
+                      ))
+                    ) : !noDoctoresDisponibles ? (
+                      <div className="col-span-full rounded-2xl bg-gray-100 px-4 py-3 text-sm font-semibold text-[#6B7280]">
+                        No hay horarios disponibles para este dia.
+                      </div>
+                    ) : (
+                      <div className="col-span-full rounded-2xl bg-gray-100 px-4 py-3 text-sm font-semibold text-[#6B7280]">
+                        Selecciona otra fecha o cambia de especialidad.
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               <Button
                 className="mt-6 w-full"
-                disabled={!selectedSlot}
-                onClick={() => setShowEspecialidadModal(true)}
+                disabled={!selectedSlot || noDoctoresDisponibles}
+                onClick={() => setShowModal(true)}
               >
                 Agendar cita
               </Button>
@@ -556,6 +585,15 @@ function PatientAppointments() {
                   </div>
                 </div>
                 <div className="mt-6 flex items-center gap-3">
+                  {cita.estado === 'PENDIENTE' && (
+                    <button
+                      className="flex-1 rounded-full bg-blue-50 px-4 py-3 text-sm font-semibold text-[#2563EB] transition hover:bg-blue-100"
+                      onClick={() => handleConfirmarEstadoCita(cita)}
+                      type="button"
+                    >
+                      Confirmar cita
+                    </button>
+                  )}
                   <button
                     className="flex-1 rounded-full bg-gray-100 px-4 py-3 text-sm font-semibold text-[#1A3A6B] transition hover:bg-blue-50"
                     onClick={() => handleOpenEdit(cita)}
@@ -608,15 +646,44 @@ function PatientAppointments() {
               </button>
             ))}
           </div>
-          <Button
-            className="mt-3 w-full"
-            onClick={() => {
-              setShowEspecialidadModal(false)
-              setShowModal(true)
-            }}
-          >
-            Continuar con {especialidadActual}
-          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showNoDoctorsModal}
+        onClose={() => setShowNoDoctorsModal(false)}
+        title="Sin doctores disponibles"
+      >
+        <div className="space-y-5">
+          <div className="rounded-2xl bg-blue-50 p-4 text-sm leading-6 text-[#1A3A6B]">
+            No hay doctores disponibles en esta especialidad por el momento.
+          </div>
+          <p className="text-sm leading-6 text-[#6B7280]">
+            Puedes elegir otra fecha para la cita o cambiar la especialidad.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              className="flex-1"
+              onClick={() => {
+                setShowNoDoctorsModal(false)
+                setSelectedDate(null)
+                setSelectedSlot(null)
+                setSlots([])
+              }}
+            >
+              Elegir otra cita
+            </Button>
+            <button
+              className="flex-1 rounded-full bg-gray-100 px-4 py-3 text-sm font-semibold text-[#1A3A6B] transition hover:bg-blue-50"
+              onClick={() => {
+                setShowNoDoctorsModal(false)
+                setShowEspecialidadModal(true)
+              }}
+              type="button"
+            >
+              Cambiar especialidad
+            </button>
+          </div>
         </div>
       </Modal>
 
