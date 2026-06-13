@@ -20,6 +20,12 @@ const rolMap = {
   Administradores: 'ADMIN',
 }
 
+const estadoMap = {
+  Activos: 'ACTIVO',
+  Inactivos: 'INACTIVO',
+  Todos: '',
+}
+
 const formInicial = {
   nombre: '',
   apellido: '',
@@ -87,6 +93,7 @@ const limpiarMedicamentos = (medicamentos) =>
 function AdminUsers() {
   const [usuarios, setUsuarios] = useState([])
   const [filtroRol, setFiltroRol] = useState('Pacientes')
+  const [filtroEstado, setFiltroEstado] = useState('Activos')
   const [busqueda, setBusqueda] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [modalTipo, setModalTipo] = useState('crear')
@@ -94,6 +101,8 @@ function AdminUsers() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [usuarioEliminar, setUsuarioEliminar] = useState(null)
   const [eliminando, setEliminando] = useState(false)
+  const [guardando, setGuardando] = useState(false)
+  const [formError, setFormError] = useState('')
   const [especialidades, setEspecialidades] = useState([])
   const [form, setForm] = useState(formInicial)
 
@@ -101,11 +110,12 @@ function AdminUsers() {
     const res = await api.get('/admin/usuarios', {
       params: {
         rol: rolMap[filtroRol],
+        ...(estadoMap[filtroEstado] && { estado: estadoMap[filtroEstado] }),
         q: busqueda,
       },
     })
     setUsuarios(res.data)
-  }, [busqueda, filtroRol])
+  }, [busqueda, filtroEstado, filtroRol])
 
   const fetchEspecialidades = useCallback(async () => {
     const res = await api.get('/admin/especialidades')
@@ -175,6 +185,7 @@ function AdminUsers() {
   }
 
   const abrirCrear = () => {
+    setFormError('')
     setForm({
       ...formInicial,
       rol: rolMap[filtroRol],
@@ -187,6 +198,7 @@ function AdminUsers() {
   }
 
   const abrirEditar = (usuario) => {
+    setFormError('')
     setUsuarioSel(usuario)
     setForm({
       ...formInicial,
@@ -236,27 +248,89 @@ function AdminUsers() {
     setShowModal(false)
     setUsuarioSel(null)
     setForm(formInicial)
+    setFormError('')
   }
 
-  const payloadForm = () => ({
-    ...form,
-    peso: form.peso === '' ? undefined : Number(form.peso),
-    altura: form.altura === '' ? undefined : Number(form.altura),
-    alergias: limpiarAlergias(form.alergias),
-    medicamentos: limpiarMedicamentos(form.medicamentos),
-    especialidadId:
-      form.especialidadId === '' ? undefined : Number(form.especialidadId),
-  })
-
-  const handleGuardar = async () => {
-    if (modalTipo === 'crear') {
-      await api.post('/admin/usuarios', payloadForm())
-    } else {
-      await api.put(`/admin/usuarios/${usuarioSel.id}`, payloadForm())
+  const payloadForm = () => {
+    const base = {
+      nombre: form.nombre.trim(),
+      apellido: form.apellido.trim(),
+      email: form.email.trim(),
+      rol: form.rol,
+      ...(modalTipo === 'crear' && { contrasena: form.contrasena }),
     }
 
-    await fetchUsuarios()
-    cerrarModal()
+    if (form.rol === 'PACIENTE') {
+      return {
+        ...base,
+        dni: form.dni.trim(),
+        telefono: form.telefono.trim(),
+        direccion: form.direccion.trim(),
+        fechaNacimiento: form.fechaNacimiento || undefined,
+        genero: form.genero,
+        grupoSanguineo: form.grupoSanguineo.trim(),
+        peso: form.peso === '' ? undefined : Number(form.peso),
+        altura: form.altura === '' ? undefined : Number(form.altura),
+        presionArterial: form.presionArterial.trim(),
+        antecedentesMedicos: form.antecedentesMedicos.trim(),
+        notasGenerales: form.notasGenerales.trim(),
+        alergias: limpiarAlergias(form.alergias),
+        medicamentos: limpiarMedicamentos(form.medicamentos),
+      }
+    }
+
+    if (form.rol === 'MEDICO') {
+      return {
+        ...base,
+        telefono: form.telefono.trim(),
+        numeroColegiatura: form.numeroColegiatura.trim(),
+        especialidadId:
+          form.especialidadId === '' ? undefined : Number(form.especialidadId),
+      }
+    }
+
+    return base
+  }
+
+  const handleGuardar = async () => {
+    try {
+      setGuardando(true)
+      setFormError('')
+      const payload = payloadForm()
+
+      if (!payload.nombre || !payload.apellido || !payload.email) {
+        setFormError('Completa nombre, apellido y correo.')
+        return
+      }
+      if (modalTipo === 'crear' && !payload.contrasena) {
+        setFormError('La contraseña es obligatoria al crear un usuario.')
+        return
+      }
+      if (payload.rol === 'PACIENTE' && !payload.dni) {
+        setFormError('El DNI del paciente es obligatorio.')
+        return
+      }
+      if (payload.rol === 'MEDICO' && (!payload.numeroColegiatura || !payload.especialidadId)) {
+        setFormError('La colegiatura y especialidad del médico son obligatorias.')
+        return
+      }
+
+      if (modalTipo === 'crear') {
+        await api.post('/admin/usuarios', payload)
+      } else {
+        await api.put(`/admin/usuarios/${usuarioSel.id}`, payload)
+      }
+
+      await fetchUsuarios()
+      cerrarModal()
+    } catch (err) {
+      setFormError(
+        err.response?.data?.message ||
+          'No se pudo guardar el usuario. Revisa los datos e intenta nuevamente.',
+      )
+    } finally {
+      setGuardando(false)
+    }
   }
 
   const handleToggle = async (usuario) => {
@@ -267,6 +341,8 @@ function AdminUsers() {
   }
 
   const abrirEliminar = (usuario) => {
+    setShowModal(false)
+    setUsuarioSel(null)
     setUsuarioEliminar(usuario)
     setShowDeleteModal(true)
   }
@@ -356,6 +432,25 @@ function AdminUsers() {
               </button>
             ))}
           </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
+          <span className="mr-1 text-xs font-bold uppercase tracking-wide text-[#6B7280]">
+            Estado
+          </span>
+          {Object.keys(estadoMap).map((estado) => (
+            <button
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                filtroEstado === estado
+                  ? 'bg-[#1A3A6B] text-white'
+                  : 'bg-gray-100 text-[#6B7280] hover:bg-blue-50 hover:text-[#2563EB]'
+              }`}
+              key={estado}
+              onClick={() => setFiltroEstado(estado)}
+              type="button"
+            >
+              {estado}
+            </button>
+          ))}
         </div>
       </Card>
 
@@ -652,11 +747,18 @@ function AdminUsers() {
             </>
           )}
         </div>
+        {formError && (
+          <div className="mt-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+            {formError}
+          </div>
+        )}
         <div className="mt-6 flex justify-end gap-3">
           <button className="rounded-full bg-gray-100 px-5 py-3 font-semibold text-[#6B7280]" onClick={cerrarModal} type="button">
             Cancelar
           </button>
-          <Button onClick={handleGuardar} type="button">Guardar</Button>
+          <Button disabled={guardando} onClick={handleGuardar} type="button">
+            {guardando ? 'Guardando...' : 'Guardar'}
+          </Button>
         </div>
       </Modal>
 
@@ -731,7 +833,7 @@ function AdminUsers() {
       </Modal>
 
       {showDeleteModal && usuarioEliminar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-[#EF4444]">
               <Trash2 className="h-8 w-8" />
