@@ -6,6 +6,7 @@ import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Input from '../../components/Input'
 import Modal from '../../components/Modal'
+import { useAppDialog } from '../../components/AppDialogProvider'
 
 const SLOTS = [
   '09:00',
@@ -76,6 +77,7 @@ const heatColor = (ocupacion) => {
 }
 
 function AdminAppointments() {
+  const { showConfirm } = useAppDialog()
   const hoy = new Date()
   const [citas, setCitas] = useState([])
   const [filtroEstado, setFiltroEstado] = useState('Todos')
@@ -131,6 +133,32 @@ function AdminAppointments() {
 
   const handleCompletar = async (id) => {
     if (!confirm('¿Marcar esta cita como completada?')) return
+
+    await api.put(`/admin/citas/${id}/estado`, { estado: 'COMPLETADA' })
+    await fetchCitas()
+  }
+
+  const handleCancelarDialog = async (id) => {
+    const confirmado = await showConfirm('¿Cancelar esta cita?', {
+      title: 'Cancelar cita',
+      type: 'danger',
+      confirmText: 'Sí, cancelar',
+      cancelText: 'No',
+    })
+    if (!confirmado) return
+
+    await api.put(`/admin/citas/${id}/estado`, { estado: 'CANCELADA' })
+    await fetchCitas()
+  }
+
+  const handleCompletarDialog = async (id) => {
+    const confirmado = await showConfirm('¿Marcar esta cita como completada?', {
+      title: 'Completar cita',
+      type: 'success',
+      confirmText: 'Sí, completar',
+      cancelText: 'No',
+    })
+    if (!confirmado) return
 
     await api.put(`/admin/citas/${id}/estado`, { estado: 'COMPLETADA' })
     await fetchCitas()
@@ -420,7 +448,7 @@ function AdminAppointments() {
               <div className="flex flex-wrap gap-3">
                 <button
                   className="rounded-full bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-100"
-                  onClick={() => handleCompletar(cita.id)}
+                  onClick={() => handleCompletarDialog(cita.id)}
                   type="button"
                 >
                   Completar
@@ -441,7 +469,7 @@ function AdminAppointments() {
                 </button>
                 <button
                   className="rounded-full bg-red-50 px-4 py-3 text-sm font-semibold text-[#EF4444] transition hover:bg-red-100"
-                  onClick={() => handleCancelar(cita.id)}
+                  onClick={() => handleCancelarDialog(cita.id)}
                   type="button"
                 >
                   Cancelar

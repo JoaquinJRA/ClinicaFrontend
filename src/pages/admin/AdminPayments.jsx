@@ -5,6 +5,7 @@ import Badge from '../../components/Badge'
 import Card from '../../components/Card'
 import Input from '../../components/Input'
 import Modal from '../../components/Modal'
+import { useAppDialog } from '../../components/AppDialogProvider'
 
 const estadoMap = {
   'Todos los estados': '',
@@ -41,6 +42,7 @@ const getMedico = (pago) =>
     : '—'
 
 function AdminPayments() {
+  const { showConfirm } = useAppDialog()
   const [resumen, setResumen] = useState({
     totalRecaudado: 0,
     pagosPendientes: 0,
@@ -85,6 +87,20 @@ function AdminPayments() {
 
   const handleMarcarPagado = async (id) => {
     if (!confirm('¿Marcar este pago como pagado?')) return
+
+    await api.patch(`/admin/pagos/${id}/marcar-pagado`)
+    await fetchPagos()
+    await fetchResumen()
+  }
+
+  const handleMarcarPagadoDialog = async (id) => {
+    const confirmado = await showConfirm('¿Marcar este pago como pagado?', {
+      title: 'Confirmar pago',
+      type: 'success',
+      confirmText: 'Sí, marcar pagado',
+      cancelText: 'No',
+    })
+    if (!confirmado) return
 
     await api.patch(`/admin/pagos/${id}/marcar-pagado`)
     await fetchPagos()
@@ -196,7 +212,7 @@ function AdminPayments() {
                       {pago.estado === 'PENDIENTE' && (
                         <button
                           className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700"
-                          onClick={() => handleMarcarPagado(pago.id)}
+                          onClick={() => handleMarcarPagadoDialog(pago.id)}
                           type="button"
                         >
                           <Check className="h-4 w-4" />

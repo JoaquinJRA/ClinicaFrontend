@@ -6,6 +6,7 @@ import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Input from '../../components/Input'
 import Modal from '../../components/Modal'
+import { useAppDialog } from '../../components/AppDialogProvider'
 import { useAuthStore } from '../../../store/authStore'
 
 const SLOTS = [
@@ -67,6 +68,7 @@ const formatTime = (fecha) =>
   })
 
 function DoctorAppointments() {
+  const { showConfirm } = useAppDialog()
   const usuario = useAuthStore((s) => s.usuario)
   const medicoId = usuario?.medicoId ?? usuario?.medico?.id
   const [citas, setCitas] = useState([])
@@ -132,6 +134,19 @@ function DoctorAppointments() {
 
   const handleCompletar = async (id) => {
     if (!confirm('¿Marcar esta cita como completada?')) return
+
+    await api.put(`/doctor/citas/${id}/estado`, { estado: 'COMPLETADA' })
+    fetchCitas()
+  }
+
+  const handleCompletarDialog = async (id) => {
+    const confirmado = await showConfirm('¿Marcar esta cita como completada?', {
+      title: 'Completar cita',
+      type: 'success',
+      confirmText: 'Sí, completar',
+      cancelText: 'No',
+    })
+    if (!confirmado) return
 
     await api.put(`/doctor/citas/${id}/estado`, { estado: 'COMPLETADA' })
     fetchCitas()
@@ -239,7 +254,7 @@ function DoctorAppointments() {
                 <div className="flex gap-3">
                   <button
                     className="rounded-full bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-100"
-                    onClick={() => handleCompletar(cita.id)}
+                    onClick={() => handleCompletarDialog(cita.id)}
                     type="button"
                   >
                     Completar

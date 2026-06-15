@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import "./index.css";
 import App from "./App.jsx";
+import AppDialogProvider from "./components/AppDialogProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -22,7 +23,9 @@ createRoot(document.getElementById("root")).render(
       }}
     />
     <BrowserRouter>
-      <App />
+      <AppDialogProvider>
+        <App />
+      </AppDialogProvider>
     </BrowserRouter>
   </StrictMode>
 );
