@@ -12,13 +12,20 @@ const medicamentoVacio = {
   frecuencia: '',
   fechaInicio: '',
   duracion: 7,
-  unidadDuracion: 'Dias',
+  unidadDuracion: 'Días',
   instrucciones: '',
 }
 
 const toDateInput = (fecha) => {
   if (!fecha) return ''
   return new Date(fecha).toISOString().slice(0, 10)
+}
+
+const formatGrupoSanguineo = (grupo) => {
+  if (!grupo) return 'No registrado'
+  const limpio = String(grupo).trim().toUpperCase()
+  const match = limpio.match(/^([+-])([ABO]{1,2})$/)
+  return match ? `${match[2]}${match[1]}` : limpio
 }
 
 function DoctorPrescriptions() {
@@ -105,7 +112,7 @@ function DoctorPrescriptions() {
       frecuencia: med.frecuencia || '',
       fechaInicio: toDateInput(med.fechaInicio),
       duracion: med.duracion ?? 7,
-      unidadDuracion: med.unidadDuracion || 'Dias',
+      unidadDuracion: med.unidadDuracion || 'Días',
       instrucciones: med.instrucciones || '',
     })
   }
@@ -128,7 +135,7 @@ function DoctorPrescriptions() {
             Tratamientos Activos
           </h1>
           <p className="mt-2 text-sm text-[#6B7280]">
-            Administre medicacion vigente, renovaciones y suspensiones del paciente.
+            Administre medicación vigente, renovaciones y suspensiones del paciente.
           </p>
         </div>
 
@@ -182,9 +189,9 @@ function DoctorPrescriptions() {
                   </p>
                 </div>
                 <div className="rounded-2xl bg-gray-50 px-4 py-3">
-                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Grupo sanguineo</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Grupo sanguíneo</p>
                   <p className="mt-1 font-bold text-[#111827]">
-                    {pacienteSeleccionado.grupoSanguineo || 'No registrado'}
+                    {formatGrupoSanguineo(pacienteSeleccionado.grupoSanguineo)}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-red-50/60 px-4 py-3 md:col-span-2">
@@ -210,10 +217,10 @@ function DoctorPrescriptions() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-                {editandoId ? 'Editar medicacion activa' : 'Agregar medicacion activa'}
+                {editandoId ? 'Editar medicación activa' : 'Agregar medicación activa'}
               </h2>
               <p className="mt-1 text-xs text-[#6B7280]">
-                Use esta seccion para renovaciones, ajustes o medicacion fuera de consulta.
+                Use esta sección para renovaciones, ajustes o medicación fuera de consulta.
               </p>
             </div>
             {editandoId && (
@@ -223,7 +230,7 @@ function DoctorPrescriptions() {
                 type="button"
               >
                 <X className="h-4 w-4" />
-                Cancelar edicion
+                Cancelar edición
               </button>
             )}
           </div>
@@ -263,7 +270,7 @@ function DoctorPrescriptions() {
                 />
               </label>
               <label>
-                <span className="mb-2 block text-sm font-semibold text-[#111827]">Duracion</span>
+                <span className="mb-2 block text-sm font-semibold text-[#111827]">Duración</span>
                 <div className="grid grid-cols-[1fr_130px] gap-3">
                   <Input
                     onChange={(event) => actualizarMedicamento('duracion', Number(event.target.value))}
@@ -276,7 +283,7 @@ function DoctorPrescriptions() {
                     onChange={(event) => actualizarMedicamento('unidadDuracion', event.target.value)}
                     value={medicamento.unidadDuracion}
                   >
-                    <option>Dias</option>
+                    <option>Días</option>
                     <option>Semanas</option>
                     <option>Meses</option>
                   </select>
@@ -296,14 +303,14 @@ function DoctorPrescriptions() {
           </div>
 
           <Button className="mt-6 w-full" onClick={handleGuardarMedicacion} type="button">
-            {editandoId ? 'Guardar cambios' : 'Agregar medicacion activa'}
+            {editandoId ? 'Guardar cambios' : 'Agregar medicación activa'}
           </Button>
         </Card>
       </section>
 
       <aside className="min-w-0">
         <h2 className="mb-4 text-xl font-bold text-[#1A3A6B]">
-          Medicacion activa
+          Medicación activa
         </h2>
         <div className="space-y-4">
           {prescripcionesActivas.length ? (
@@ -319,7 +326,7 @@ function DoctorPrescriptions() {
                       <p className="mt-2 text-sm text-[#6B7280]">{med.instrucciones}</p>
                     )}
                     <Badge className="mt-4" variant="blue">
-                      {med.diasRestantes ?? 0} dias restantes
+                      {med.diasRestantes ?? 0} días restantes
                     </Badge>
                   </div>
                 </div>
@@ -346,7 +353,7 @@ function DoctorPrescriptions() {
           ) : (
             <Card>
               <p className="text-sm text-[#6B7280]">
-                Sin medicacion activa registrada
+                Sin medicación activa registrada
               </p>
             </Card>
           )}
@@ -367,7 +374,7 @@ function DoctorPrescriptions() {
               <span className="font-bold text-[#111827]">
                 {medicamentoSuspender.nombre}
               </span>{' '}
-              de la medicacion activa del paciente?
+              de la medicación activa del paciente?
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">

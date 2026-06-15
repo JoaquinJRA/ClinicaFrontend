@@ -7,7 +7,7 @@ import Card from '../../components/Card'
 import { useAuthStore } from '../../../store/authStore'
 
 const normalizarUnidad = (unidad) =>
-  String(unidad || 'Dias')
+  String(unidad || 'Días')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -127,8 +127,8 @@ function PatientMedications() {
             <td>${escapeHtml(med.frecuencia || 'No registrada')}</td>
             <td>${escapeHtml(formatDate(inicio))}</td>
             <td>${escapeHtml(fin ? formatDate(fin) : 'No registrada')}</td>
-            <td>${escapeHtml(diasTotales ? `${diasTotales} dias` : 'No registrada')}</td>
-            <td>${escapeHtml(`${med.diasRestantes ?? '-'} dias`)}</td>
+            <td>${escapeHtml(diasTotales ? `${diasTotales} días` : 'No registrada')}</td>
+            <td>${escapeHtml(`${med.diasRestantes ?? '-'} días`)}</td>
             <td>${escapeHtml(med.instrucciones || 'Sin indicaciones')}</td>
           </tr>
         `
@@ -140,7 +140,7 @@ function PatientMedications() {
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Medicamentos activos - Clinica Luz</title>
+          <title>Medicamentos activos - Clínica Luz</title>
           <style>
             * { box-sizing: border-box; }
             body {
@@ -205,11 +205,11 @@ function PatientMedications() {
         <body>
           <div class="header">
             <div>
-              <div class="brand">Clinica Luz</div>
+              <div class="brand">Clínica Luz</div>
               <div class="subtitle">Listado de medicamentos activos</div>
             </div>
             <div>
-              <div class="label">Fecha de impresion</div>
+              <div class="label">Fecha de impresión</div>
               <div class="value">${escapeHtml(fechaEmision)}</div>
             </div>
           </div>
@@ -224,7 +224,7 @@ function PatientMedications() {
                 <th>Frecuencia</th>
                 <th>Inicio</th>
                 <th>Termina</th>
-                <th>Duracion</th>
+                <th>Duración</th>
                 <th>Restante</th>
                 <th>Indicaciones</th>
               </tr>
@@ -233,7 +233,7 @@ function PatientMedications() {
           </table>
 
           <div class="notes">
-            Este documento resume los medicamentos activos registrados en Clinica Luz. Siga las indicaciones medicas y consulte ante cualquier reaccion adversa.
+            Este documento resume los medicamentos activos registrados en Clínica Luz. Siga las indicaciones médicas y consulte ante cualquier reacción adversa.
           </div>
 
           <script>
@@ -276,7 +276,7 @@ function PatientMedications() {
           <div>
             <h1 className="text-3xl font-bold text-[#1A3A6B]">Medicamentos</h1>
             <p className="mt-2 text-sm text-[#6B7280]">
-              Consulta tus medicamentos recetados, indicaciones y duracion del tratamiento.
+              Consulta tus medicamentos recetados, indicaciones y duración del tratamiento.
             </p>
           </div>
           <button
@@ -344,10 +344,10 @@ function PatientMedications() {
                   </div>
                   <div className="rounded-2xl bg-gray-50 p-4">
                     <p className="text-xs font-bold uppercase text-gray-400">
-                      Duracion
+                      Duración
                     </p>
                     <p className="mt-2 text-sm font-semibold text-[#111827]">
-                      {diasTotales ? `${diasTotales} dias` : 'No registrada'}
+                      {diasTotales ? `${diasTotales} días` : 'No registrada'}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-gray-50 p-4">
@@ -355,7 +355,7 @@ function PatientMedications() {
                       Restante
                     </p>
                     <p className="mt-2 text-sm font-semibold text-[#111827]">
-                      {item.diasRestantes ?? '-'} dias
+                      {item.diasRestantes ?? '-'} días
                     </p>
                   </div>
                 </div>
@@ -397,11 +397,11 @@ function PatientMedications() {
               {medicamentosFinalizando.length ? (
                 medicamentosFinalizando.map((med) => (
                   <p key={med.id}>
-                    {med.nombre}: {med.diasRestantes} dia(s) restantes.
+                    {med.nombre}: {med.diasRestantes} día(s) restantes.
                   </p>
                 ))
               ) : (
-                <p>No tienes tratamientos por finalizar en los proximos dias.</p>
+                <p>No tienes tratamientos por finalizar en los próximos días.</p>
               )}
             </div>
           </Card>

@@ -19,6 +19,14 @@ const getDoctorLabel = (consulta) =>
     ? consulta.doctor
     : `Dr./Dra. ${consulta.doctor}`
 
+const formatTextoMedico = (texto) =>
+  String(texto ?? '')
+    .replaceAll('Clinica', 'Clínica')
+    .replaceAll('Cardiologia', 'Cardiología')
+    .replaceAll('Duracion', 'Duración')
+    .replaceAll(' Dias', ' Días')
+    .replaceAll(' dias', ' días')
+
 function PatientHistory() {
   const usuario = useAuthStore((s) => s.usuario)
   const pacienteId = usuario?.pacienteId ?? usuario?.paciente?.id
@@ -44,7 +52,7 @@ function PatientHistory() {
     } catch (err) {
       setError(
         err.response?.data?.message ??
-          'No se pudo cargar el historial clínico.',
+          'No se pudo cargar el historial cl?nico.',
       )
     } finally {
       setLoading(false)
@@ -103,7 +111,7 @@ function PatientHistory() {
                       {formatFecha(consulta.fecha)}
                     </p>
                     <h2 className="mt-1 text-lg font-bold text-[#111827]">
-                      {getDoctorLabel(consulta)} · {consulta.especialidad}
+                      {getDoctorLabel(consulta)} · {formatTextoMedico(consulta.especialidad)}
                     </h2>
                     <p className="mt-1 text-sm text-[#6B7280]">
                       {consulta.motivo || 'Consulta médica registrada.'}
@@ -139,7 +147,9 @@ function PatientHistory() {
                         Receta Emitida
                       </p>
                       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-[#111827]">
-                        {consulta.receta || 'Sin receta emitida.'}
+                        {consulta.receta
+                          ? formatTextoMedico(consulta.receta)
+                          : 'Sin receta emitida.'}
                       </p>
                     </div>
                   </div>

@@ -54,6 +54,27 @@ const formatFechaConsulta = (fecha) =>
     year: "numeric",
   });
 
+const formatGrupoSanguineo = (grupo) => {
+  if (!grupo) return "-";
+  const limpio = String(grupo).trim().toUpperCase();
+  const match = limpio.match(/^([+-])([ABO]{1,2})$/);
+  return match ? `${match[2]}${match[1]}` : limpio;
+};
+
+const formatAltura = (altura) => {
+  if (!altura) return "-";
+  const valor = Number(altura);
+  if (!Number.isFinite(valor)) return `${altura}`;
+  return valor <= 3 ? `${valor} m` : `${valor} cm`;
+};
+
+const formatTextoMedico = (texto) =>
+  String(texto ?? "")
+    .replaceAll("Cardiologia", "Cardiología")
+    .replaceAll("Duracion", "Duración")
+    .replaceAll(" Dias", " Días")
+    .replaceAll(" dias", " días");
+
 function PatientDashboard() {
   const usuario = useAuthStore((s) => s.usuario);
   const pacienteId = usuario?.pacienteId ?? usuario?.paciente?.id;
@@ -98,8 +119,8 @@ function PatientDashboard() {
     () => [
       {
         icon: Droplets,
-        value: data?.grupoSanguineo ?? "-",
-        label: "Grupo Sanguineo",
+        value: formatGrupoSanguineo(data?.grupoSanguineo),
+        label: "Grupo sanguíneo",
       },
       {
         icon: Scale,
@@ -108,13 +129,13 @@ function PatientDashboard() {
       },
       {
         icon: ArrowUpDown,
-        value: data?.altura ? `${data.altura} cm` : "-",
+        value: formatAltura(data?.altura),
         label: "Altura",
       },
       {
         icon: Activity,
         value: data?.presionArterial ?? "-",
-        label: "Hemoglobina",
+        label: "Presión arterial",
       },
     ],
     [data],
@@ -167,7 +188,7 @@ function PatientDashboard() {
           </Card>
           <Card className="p-5">
             <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-              Genero
+              Género
             </p>
             <p className="mt-2 text-lg font-bold text-[#111827]">
               {generoLabels[data.genero] ?? "-"}
@@ -177,7 +198,7 @@ function PatientDashboard() {
 
         <Card>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Informacion General
+            Información general
           </h2>
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {generalInfo.map((item) => (
@@ -269,7 +290,7 @@ function PatientDashboard() {
 
         <Card>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Historial Medico
+            Historial médico
           </h2>
           <div className="mt-5 space-y-3">
             {historial.length ? (
@@ -287,7 +308,7 @@ function PatientDashboard() {
                         {formatFechaConsulta(consulta.fecha)}
                       </p>
                       <p className="mt-1 font-bold text-[#111827]">
-                        Dr. {consulta.doctor} · {consulta.especialidad}
+                        Dr. {consulta.doctor} · {formatTextoMedico(consulta.especialidad)}
                       </p>
                       <p className="mt-1 text-sm text-[#6B7280]">
                         {consulta.motivo}
@@ -298,10 +319,10 @@ function PatientDashboard() {
                   <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                     <div className="rounded-xl bg-white p-3">
                       <p className="text-xs font-bold uppercase text-gray-400">
-                        Diagnostico
+                        Diagnóstico
                       </p>
                       <p className="mt-2 text-sm leading-6 text-[#111827]">
-                        {consulta.diagnostico || "Sin diagnostico registrado"}
+                        {consulta.diagnostico || "Sin diagnóstico registrado"}
                       </p>
                     </div>
                     <div className="rounded-xl bg-white p-3">
@@ -317,7 +338,9 @@ function PatientDashboard() {
                         Receta
                       </p>
                       <p className="mt-2 text-sm leading-6 text-[#111827]">
-                        {consulta.receta || "Sin receta emitida"}
+                        {consulta.receta
+                          ? formatTextoMedico(consulta.receta)
+                          : "Sin receta emitida"}
                       </p>
                     </div>
                   </div>

@@ -25,7 +25,7 @@ const medicamentoInicial = {
   frecuencia: "",
   fechaInicio: "",
   duracion: 7,
-  unidadDuracion: "Dias",
+  unidadDuracion: "Días",
   instrucciones: "",
 };
 
@@ -33,7 +33,7 @@ const resumenDiagnostico = (diagnostico) => {
   const primeraLinea = String(diagnostico || "").split("\n")[0];
   return primeraLinea.length > 42
     ? `${primeraLinea.slice(0, 42)}...`
-    : primeraLinea || "Diagnostico registrado";
+    : primeraLinea || "Diagnóstico registrado";
 };
 
 const formatFecha = (fecha) =>
@@ -50,6 +50,13 @@ const escapeHtml = (value) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+
+const formatGrupoSanguineo = (grupo) => {
+  if (!grupo) return "No registrado";
+  const limpio = String(grupo).trim().toUpperCase();
+  const match = limpio.match(/^([+-])([ABO]{1,2})$/);
+  return match ? `${match[2]}${match[1]}` : limpio;
+};
 
 function DoctorDiagnosis() {
   const [busquedaId, setBusquedaId] = useState("");
@@ -171,7 +178,7 @@ function DoctorDiagnosis() {
     }
 
     if (!form.diagnostico.trim()) {
-      alert("El diagnostico es requerido");
+      alert("El diagnóstico es requerido");
       return;
     }
 
@@ -185,7 +192,7 @@ function DoctorDiagnosis() {
       medicamentos: medicamentos.filter((medicamento) => medicamento.nombre || medicamento.dosis),
     });
 
-    setSuccessMsg("Consulta guardada con diagnostico y prescripcion");
+    setSuccessMsg("Consulta guardada con diagnóstico y prescripción");
     await recargarHistorial();
     setForm(formInicial);
     setSintomas([]);
@@ -231,7 +238,7 @@ function DoctorDiagnosis() {
             <td>${escapeHtml(medicamento.fechaInicio || "-")}</td>
             <td>${escapeHtml(
               medicamento.duracion
-                ? `${medicamento.duracion} ${medicamento.unidadDuracion || "Dias"}`
+                ? `${medicamento.duracion} ${medicamento.unidadDuracion || "Días"}`
                 : "-",
             )}</td>
             <td>${escapeHtml(medicamento.instrucciones || "-")}</td>
@@ -245,7 +252,7 @@ function DoctorDiagnosis() {
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Receta medica - Clinica Luz</title>
+          <title>Receta médica - Clínica Luz</title>
           <style>
             * { box-sizing: border-box; }
             body {
@@ -334,16 +341,16 @@ function DoctorDiagnosis() {
         <body>
           <div class="header">
             <div>
-              <div class="brand">Clinica Luz</div>
-              <div class="subtitle">Receta medica para impresion</div>
+              <div class="brand">Clínica Luz</div>
+              <div class="subtitle">Receta médica para impresión</div>
             </div>
             <div>
-              <div class="label">Fecha de emision</div>
+              <div class="label">Fecha de emisión</div>
               <div class="value">${escapeHtml(fechaEmision)}</div>
             </div>
           </div>
 
-          <h1 class="title">Prescripcion medica</h1>
+          <h1 class="title">Prescripción médica</h1>
 
           <div class="meta">
             <div class="box">
@@ -353,7 +360,7 @@ function DoctorDiagnosis() {
               )}</div>
             </div>
             <div class="box">
-              <div class="label">Codigo / DNI</div>
+              <div class="label">Código / DNI</div>
               <div class="value">${escapeHtml(pacienteSeleccionado.codigo)} · DNI ${escapeHtml(
                 pacienteSeleccionado.dni || "-",
               )}</div>
@@ -386,7 +393,7 @@ function DoctorDiagnosis() {
                 <th>Dosis</th>
                 <th>Frecuencia</th>
                 <th>Inicio</th>
-                <th>Duracion</th>
+                <th>Duración</th>
                 <th>Indicaciones</th>
               </tr>
             </thead>
@@ -394,11 +401,11 @@ function DoctorDiagnosis() {
           </table>
 
           <div class="notes">
-            Esta receta corresponde a la atencion registrada en Clinica Luz. Siga las indicaciones del medico tratante y consulte ante reacciones adversas.
+            Esta receta corresponde a la atención registrada en Clínica Luz. Siga las indicaciones del médico tratante y consulte ante reacciones adversas.
           </div>
 
           <div class="signature">
-            <div class="line">Firma y sello del medico</div>
+            <div class="line">Firma y sello del médico</div>
           </div>
 
           <script>
@@ -416,9 +423,9 @@ function DoctorDiagnosis() {
   return (
     <div className="mx-auto max-w-280">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[#1A3A6B]">Diagnosticos</h1>
+        <h1 className="text-3xl font-bold text-[#1A3A6B]">Diagnósticos</h1>
         <p className="mt-2 text-sm text-[#6B7280]">
-          Registre diagnosticos visuales y revise antecedentes del paciente.
+          Registre diagnósticos visuales y revise antecedentes del paciente.
         </p>
       </div>
 
@@ -470,7 +477,7 @@ function DoctorDiagnosis() {
                 {pacienteSeleccionado.nombre} {pacienteSeleccionado.apellido}
               </h2>
               <p className="mt-1 text-sm text-[#6B7280]">
-                {pacienteSeleccionado.codigo} · DNI {pacienteSeleccionado.dni} · {pacienteSeleccionado.edad ?? "-"} anos ·{" "}
+                {pacienteSeleccionado.codigo} · DNI {pacienteSeleccionado.dni} · {pacienteSeleccionado.edad ?? "-"} años ·{" "}
                 {generoLabel[pacienteSeleccionado.genero] ??
                   pacienteSeleccionado.genero}
               </p>
@@ -479,7 +486,7 @@ function DoctorDiagnosis() {
                   Peso: {pacienteSeleccionado.peso ? `${pacienteSeleccionado.peso} kg` : "No registrado"}
                 </Badge>
                 <Badge>
-                  Grupo: {pacienteSeleccionado.grupoSanguineo || "No registrado"}
+                  Grupo: {formatGrupoSanguineo(pacienteSeleccionado.grupoSanguineo)}
                 </Badge>
               </div>
             </div>
@@ -501,7 +508,7 @@ function DoctorDiagnosis() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_420px]">
         <Card>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Nuevo diagnostico
+            Nuevo diagnóstico
           </h2>
 
           <div className="mt-5 space-y-5">
@@ -518,7 +525,7 @@ function DoctorDiagnosis() {
 
             <div>
               <span className="mb-2 block text-sm font-semibold text-[#111827]">
-                Sintomas
+                Síntomas
               </span>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Input
@@ -561,14 +568,14 @@ function DoctorDiagnosis() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-[#111827]">
-                Diagnostico
+                Diagnóstico
               </span>
               <textarea
                 className="min-h-28 w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-[#111827] outline-none focus:ring-2 focus:ring-[#2563EB]/30"
                 onChange={(event) =>
                   actualizarForm("diagnostico", event.target.value)
                 }
-                placeholder="Describa el diagnostico del paciente"
+                placeholder="Describa el diagnóstico del paciente"
                 required
                 value={form.diagnostico}
               />
@@ -592,10 +599,10 @@ function DoctorDiagnosis() {
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-                    Prescripcion medica
+                    Prescripción médica
                   </h3>
                   <p className="mt-1 text-xs text-[#6B7280]">
-                    Estos medicamentos se guardaran en la receta de esta consulta y en medicacion activa del paciente.
+                    Estos medicamentos se guardarán en la receta de esta consulta y en medicación activa del paciente.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
@@ -696,7 +703,7 @@ function DoctorDiagnosis() {
                       <div className="grid grid-cols-[1fr_140px] gap-3 md:col-span-2">
                         <label className="block">
                           <span className="mb-2 block text-xs font-bold uppercase text-gray-400">
-                            Duracion
+                            Duración
                           </span>
                           <Input
                             min="1"
@@ -726,7 +733,7 @@ function DoctorDiagnosis() {
                             }
                             value={medicamento.unidadDuracion}
                           >
-                            <option value="Dias">Dias</option>
+                            <option value="Días">Días</option>
                             <option value="Semanas">Semanas</option>
                             <option value="Meses">Meses</option>
                           </select>
@@ -774,13 +781,13 @@ function DoctorDiagnosis() {
           )}
 
           <Button className="mt-6 w-full" onClick={handleGuardar} type="button">
-            Guardar Diagnostico →
+            Guardar Diagnóstico →
           </Button>
         </Card>
 
         <section>
           <h2 className="mb-4 text-xl font-bold text-[#1A3A6B]">
-            Historial de diagnosticos
+            Historial de diagnósticos
           </h2>
           <div className="space-y-4">
             {historialDiagnosticos.length ? (
@@ -814,7 +821,7 @@ function DoctorDiagnosis() {
                     {isOpen && (
                       <div className="space-y-3 border-t border-gray-100 px-5 py-4 text-sm leading-6 text-[#6B7280]">
                         <p>
-                          <span className="font-bold text-[#111827]">Fecha de emision:</span>{" "}
+                          <span className="font-bold text-[#111827]">Fecha de emisión:</span>{" "}
                           {formatFecha(diagnostico.creadoEn)}
                         </p>
                         <p>
@@ -822,8 +829,8 @@ function DoctorDiagnosis() {
                           {diagnostico.motivo || "Sin motivo registrado"}
                         </p>
                         <p>
-                          <span className="font-bold text-[#111827]">Sintomas:</span>{" "}
-                          {diagnostico.sintomas || "Sin sintomas registrados"}
+                          <span className="font-bold text-[#111827]">Síntomas:</span>{" "}
+                          {diagnostico.sintomas || "Sin síntomas registrados"}
                         </p>
                         <p>
                           <span className="font-bold text-[#111827]">Diagnostico:</span>{" "}
@@ -850,7 +857,7 @@ function DoctorDiagnosis() {
               <Card>
                 <p className="text-sm text-[#6B7280]">
                   {pacienteSeleccionado
-                    ? "Sin diagnosticos registrados para este paciente"
+                    ? "Sin diagnósticos registrados para este paciente"
                     : "Busca y selecciona un paciente para ver su historial"}
                 </p>
               </Card>

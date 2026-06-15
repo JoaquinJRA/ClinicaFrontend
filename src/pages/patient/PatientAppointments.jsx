@@ -16,7 +16,7 @@ import Card from '../../components/Card'
 import Modal from '../../components/Modal'
 import { useAuthStore } from '../../../store/authStore'
 
-const weekDays = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB']
+const weekDays = ['DOM', 'LUN', 'MAR', 'MI?', 'JUE', 'VIE', 'S?B']
 const ESTADOS_ACTIVOS = ['PENDIENTE', 'CONFIRMADA']
 const ESTADO_BADGE_VARIANTS = {
   PENDIENTE: 'pending',
@@ -226,7 +226,7 @@ function PatientAppointments() {
       })
       toast.success(
         res.data?.smsEnviado
-          ? 'Cita confirmada. Se envio un SMS al paciente.'
+          ? 'Cita confirmada. Se envi? un SMS al paciente.'
           : 'Cita confirmada.',
       )
       await fetchCitasPaciente()
@@ -381,7 +381,7 @@ function PatientAppointments() {
       <section className="min-w-0">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#1A3A6B] sm:text-3xl">
-            Citas Medicas
+            Citas m?dicas
           </h1>
           <p className="mt-2 text-sm text-[#6B7280]">
             Consulte disponibilidad, horarios y estado de sus próximas
@@ -394,6 +394,7 @@ function PatientAppointments() {
             <div className="flex items-center gap-3">
               <button
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-[#1A3A6B] transition hover:bg-blue-50"
+                aria-label="Mes anterior"
                 onClick={() => handleMonthChange(-1)}
                 type="button"
               >
@@ -404,6 +405,7 @@ function PatientAppointments() {
               </h2>
               <button
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-[#1A3A6B] transition hover:bg-blue-50"
+                aria-label="Mes siguiente"
                 onClick={() => handleMonthChange(1)}
                 type="button"
               >
@@ -507,7 +509,7 @@ function PatientAppointments() {
                       ))
                     ) : !noDoctoresDisponibles ? (
                       <div className="col-span-full rounded-2xl bg-gray-100 px-4 py-3 text-sm font-semibold text-[#6B7280]">
-                        No hay horarios disponibles para este dia.
+                        No hay horarios disponibles para este d?a.
                       </div>
                     ) : (
                       <div className="col-span-full rounded-2xl bg-gray-100 px-4 py-3 text-sm font-semibold text-[#6B7280]">
@@ -603,7 +605,9 @@ function PatientAppointments() {
                   </button>
                   <button
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-50 text-[#EF4444] transition hover:bg-red-100"
+                    aria-label={`Cancelar cita ${cita.id}`}
                     onClick={() => handleCancelarCita(cita)}
+                    title="Cancelar cita"
                     type="button"
                   >
                     <X className="h-5 w-5" />

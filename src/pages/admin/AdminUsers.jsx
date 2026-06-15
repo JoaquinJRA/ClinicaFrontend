@@ -66,6 +66,20 @@ const getUsuarioDocumento = (usuario) =>
     ? `CMP-${usuario.medico.numeroColegiatura}`
     : 'ADMIN')
 
+const formatGrupoSanguineo = (grupo) => {
+  if (!grupo) return '—'
+  const limpio = String(grupo).trim().toUpperCase()
+  const match = limpio.match(/^([+-])([ABO]{1,2})$/)
+  return match ? `${match[2]}${match[1]}` : limpio
+}
+
+const formatAltura = (altura) => {
+  if (altura === null || altura === undefined || altura === '') return '—'
+  const valor = Number(altura)
+  if (!Number.isFinite(valor)) return `${altura}`
+  return valor <= 3 ? `${valor} m` : `${valor} cm`
+}
+
 const getUsuarioTelefono = (usuario) =>
   usuario.paciente?.telefono || usuario.medico?.telefono || '—'
 
@@ -490,28 +504,36 @@ function AdminUsers() {
                     <div className="flex items-center gap-2">
                       <button
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-[#2563EB]"
+                        aria-label={`Editar usuario ${getUsuarioNombre(usuario)}`}
                         onClick={() => abrirEditar(usuario)}
+                        title="Editar usuario"
                         type="button"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-[#EF4444]"
+                        aria-label={`Eliminar usuario ${getUsuarioNombre(usuario)}`}
                         onClick={() => abrirEliminar(usuario)}
+                        title="Eliminar usuario"
                         type="button"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                       <button
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-[#6B7280]"
+                        aria-label={`Ver detalle de ${getUsuarioNombre(usuario)}`}
                         onClick={() => abrirVer(usuario)}
+                        title="Ver detalle"
                         type="button"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       <button
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-[#6B7280]"
+                        aria-label={`${usuario.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'} usuario ${getUsuarioNombre(usuario)}`}
                         onClick={() => handleToggle(usuario)}
+                        title={usuario.estado === 'ACTIVO' ? 'Desactivar usuario' : 'Activar usuario'}
                         type="button"
                       >
                         {usuario.estado === 'ACTIVO' ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
@@ -782,9 +804,9 @@ function AdminUsers() {
                   <p><span className="font-bold text-[#111827]">Dirección:</span> {usuarioSel.paciente.direccion || '—'}</p>
                   <p><span className="font-bold text-[#111827]">Nacimiento:</span> {fechaInput(usuarioSel.paciente.fechaNacimiento) || '—'}</p>
                   <p><span className="font-bold text-[#111827]">Género:</span> {usuarioSel.paciente.genero}</p>
-                  <p><span className="font-bold text-[#111827]">Grupo sanguíneo:</span> {usuarioSel.paciente.grupoSanguineo || '—'}</p>
-                  <p><span className="font-bold text-[#111827]">Peso:</span> {usuarioSel.paciente.peso ?? '—'}</p>
-                  <p><span className="font-bold text-[#111827]">Altura:</span> {usuarioSel.paciente.altura ?? '—'}</p>
+                  <p><span className="font-bold text-[#111827]">Grupo sanguíneo:</span> {formatGrupoSanguineo(usuarioSel.paciente.grupoSanguineo)}</p>
+                  <p><span className="font-bold text-[#111827]">Peso:</span> {usuarioSel.paciente.peso ? `${usuarioSel.paciente.peso} kg` : '?'}</p>
+                  <p><span className="font-bold text-[#111827]">Altura:</span> {formatAltura(usuarioSel.paciente.altura)}</p>
                   <p><span className="font-bold text-[#111827]">Presión arterial:</span> {usuarioSel.paciente.presionArterial || '—'}</p>
                   <p className="md:col-span-2"><span className="font-bold text-[#111827]">Antecedentes:</span> {usuarioSel.paciente.antecedentesMedicos || '—'}</p>
                   <p className="md:col-span-2"><span className="font-bold text-[#111827]">Historial médico:</span> {usuarioSel.paciente.historialMedico?.notasGenerales || '—'}</p>
