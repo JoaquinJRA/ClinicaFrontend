@@ -529,15 +529,17 @@ function AdminUsers() {
                       >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-[#6B7280]"
-                        aria-label={`${usuario.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'} usuario ${getUsuarioNombre(usuario)}`}
-                        onClick={() => handleToggle(usuario)}
-                        title={usuario.estado === 'ACTIVO' ? 'Desactivar usuario' : 'Activar usuario'}
-                        type="button"
-                      >
-                        {usuario.estado === 'ACTIVO' ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
-                      </button>
+                      {usuario.rol?.nombre !== 'ADMIN' && (
+                        <button
+                          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-[#6B7280]"
+                          aria-label={`${usuario.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'} usuario ${getUsuarioNombre(usuario)}`}
+                          onClick={() => handleToggle(usuario)}
+                          title={usuario.estado === 'ACTIVO' ? 'Desactivar usuario' : 'Activar usuario'}
+                          type="button"
+                        >
+                          {usuario.estado === 'ACTIVO' ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
