@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://clinica-frontend-rosy-six.vercel.app/login",
+  baseURL: "https://clinicabackend-9qp3.onrender.com/api",
   withCredentials: true,
 });
 
