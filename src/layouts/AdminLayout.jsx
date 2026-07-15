@@ -13,8 +13,6 @@ function AdminLayout() {
   return (
     <div className="min-h-screen bg-[#F3F4F6] font-sans text-[#111827]">
       <Sidebar
-        actionLabel="+ Agregar Usuario"
-        actionTo="/admin/users"
         homeTo="/admin/users"
         items={adminNavItems}
       />

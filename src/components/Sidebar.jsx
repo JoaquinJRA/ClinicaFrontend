@@ -1,13 +1,10 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { LogOut, PlusSquare } from "lucide-react";
 import toast from "react-hot-toast";
-import Button from "./Button";
 import { logoutRequest } from "../api/auth.api";
 import { useAuthStore } from "../../store/authStore";
 
 function Sidebar({
-  actionLabel = "+ Nueva Cita",
-  actionTo = "/patient/appointments",
   homeTo = "/patient/dashboard",
   items,
 }) {
@@ -52,10 +49,7 @@ function Sidebar({
         ))}
       </nav>
 
-      <div className="mt-4 hidden space-y-4 lg:mt-auto lg:block">
-        <Link className="block" to={actionTo}>
-          <Button className="w-full px-4 py-3 text-sm">{actionLabel}</Button>
-        </Link>
+      <div className="mt-4 hidden lg:mt-auto lg:block">
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-[#6B7280] transition hover:bg-gray-50 hover:text-[#EF4444]"

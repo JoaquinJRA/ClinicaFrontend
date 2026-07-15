@@ -12,8 +12,6 @@ function DoctorLayout() {
   return (
     <div className="min-h-screen bg-[#F3F4F6] font-sans text-[#111827]">
       <Sidebar
-        actionLabel="+ Nueva Consulta"
-        actionTo="/doctor/appointments"
         homeTo="/doctor/appointments"
         items={doctorNavItems}
       />
